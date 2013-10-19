@@ -19,7 +19,7 @@ Compilation
       - JACK (http://jackaudio.org/download)
 
 2. Clone the repository using (for instance):
-   `git clone git://github.com/nnen/waterfall.git`.
+   `git clone https://github.com/MLAB-project/radio-observer.git`.
 3. Checkout and build the `cppapp` submodule:
         
         $ git submodule init
