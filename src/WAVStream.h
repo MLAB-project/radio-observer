@@ -18,6 +18,7 @@ using namespace std;
 
 #include <cppapp/Object.h>
 #include <cppapp/Input.h>
+#include <cppapp/Logger.h>
 
 using namespace cppapp;
 
@@ -75,10 +76,10 @@ private:
 	int16_t readInt16();
 	string readString(int length);
 	
-	void readFormatSubchunk(int size);
-	void readInf1Subchunk(int size);
-	void readDataSubchunk(int size);
-	void readUnknownSubchunk(int size);
+	bool readFormatSubchunk(int size);
+	bool readInf1Subchunk(int size);
+	bool readDataSubchunk(int size);
+	bool readUnknownSubchunk(int size);
 	int readSubchunk();
 	
 	WAVStream(const WAVStream& other);
