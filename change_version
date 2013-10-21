@@ -1,0 +1,23 @@
+#!/bin/bash
+# USAGE: change_version MAJOR MINOR [REV]
+
+MAJOR=$1
+MINOR=$2
+REVISION=$3
+
+function change_file {
+	local file_name=$1
+	local sed_pattern=$2
+	
+	echo -e "========================================================="
+	echo "Changing ${file_name}..."
+	cp "${file_name}" "${file_name}.bak"
+	sed -e "${sed_pattern}" "${file_name}.bak" > "${file_name}"
+	diff "${file_name}.bak" "${file_name}"
+}
+
+change_file README.md "s/\(version\s*\`\)[^\`]*/\1$MAJOR.${MINOR}${REVISION}/g"
+change_file Doxyfile "s/\(PROJECT_NUMBER\s*\=\s*\).*/\1$MAJOR.${MINOR}${REVISION}/g"
+change_file Makefile "s/\(VERSION\s*\=\s*\).*/\1$MAJOR.${MINOR}${REVISION}/g"
+change_file src/config.h "s/\(PACKAGE_VERSION\s*\)\"[^\"]*\"/\1\"$MAJOR.${MINOR}${REVISION}\"/g"
+
