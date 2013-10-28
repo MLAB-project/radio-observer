@@ -72,14 +72,15 @@ private:
 		return result;
 	}
 	
+	uint32_t readUInt32();
 	int32_t readInt32();
 	int16_t readInt16();
 	string readString(int length);
 	
-	bool readFormatSubchunk(int size);
-	bool readInf1Subchunk(int size);
-	bool readDataSubchunk(int size);
-	bool readUnknownSubchunk(int size);
+	bool readFormatSubchunk(int64_t size);
+	bool readInf1Subchunk(int64_t size);
+	bool readDataSubchunk(int64_t size);
+	bool readUnknownSubchunk(int64_t size);
 	int readSubchunk();
 	
 	WAVStream(const WAVStream& other);
