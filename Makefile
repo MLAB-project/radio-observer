@@ -4,7 +4,7 @@
 
 
 BIN_NAME     = waterfall
-VERSION      = 0.1.1
+VERSION      = 0.1.2
 # yes / no
 IS_LIBRARY   = no
 
@@ -18,7 +18,7 @@ DOCS_ARCH    = $(BIN_NAME)-$(VERSION)-docs.html.tar.gz
 
 UNAME       := $(shell uname)
 CXXFLAGS     = -g -O0 -Wall -Icppapp
-LDFLAGS      = -Lcppapp -lcppapp -lfftw3 -lcfitsio
+LDFLAGS      = -Lcppapp -lcppapp -lfftw3 -lcfitsio -lpthread
 ifeq ($(UNAME),Darwin)
 	LDFLAGS += -framework jackmp
 else

@@ -19,7 +19,7 @@ Compilation
       - JACK (http://jackaudio.org/download)
 
 2. Clone the repository using (for instance):
-   `git clone git://github.com/nnen/waterfall.git`.
+   `git clone https://github.com/MLAB-project/radio-observer.git`.
 3. Checkout and build the `cppapp` submodule:
         
         $ git submodule init
@@ -27,16 +27,9 @@ Compilation
         $ cd cppapp
         $ make
 
-4. Change directory to the `cppapp` subdirectory and build the cppapp library:
-        
-        $ cd cppapp
-        $ autoreconf --install
-        $ ./configure
-        $ make 
-
-5. In the `waterfall` directory, run `make`. The resulting binary, named
+4. In the `radio-observer` directory, run `make`. The resulting binary, named
    `waterfall`, should appear in the project's root directory.
-6. If anything goes wrong, please send me an email with the output at
+5. If anything goes wrong, please send me an email with the output at
    milikjan@fit.cvut.cz .
 
 

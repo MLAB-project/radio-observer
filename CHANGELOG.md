@@ -16,6 +16,12 @@ Fixes:
     line `WFTime time = outBuffer_.times[0];` To circumvent this, the current
     time at the time of writing the file is used for now.
 
+### v0.1.2 HOTFIX (2013-08-16)
+
+Fixes:
+  
+  - Switch left and right halves of the spectrum in the waterfall output.
+
 
 Planned Features
 ----------------
