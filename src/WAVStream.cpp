@@ -212,7 +212,7 @@ void WAVStream::run()
 		return;
 	}
 	
-	uint32_t chunkSize = readUInt32();
+	int64_t chunkSize = (int64_t)readUInt32();
 	//if (chunkSize <= 0) {
 	//	LOG_ERROR("Invalid chunk size: " << chunkSize << ". Exiting...");
 	//	return;
