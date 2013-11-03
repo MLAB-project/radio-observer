@@ -275,6 +275,9 @@ public:
 	
 	virtual ~SnapshotRecorder() {}
 	
+	virtual string getFileName(WFTime time);
+	virtual string getFileName(const string &typ, const string &origin, WFTime time);
+	
 	virtual int requestBufferSize();
 	
 	virtual void start();

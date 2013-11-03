@@ -29,10 +29,19 @@ protected:
 	
 	int   lowNoiseBin_;
 	int   noiseWidth_;
+
+	float minDetectFq_;
+	float maxDetectFq_;
+
+	int   lowDetectBin_;
+	int   detectWidth_;
 	
 	bool  bolidDetected_;
+	bool  bolidRecord_;
+	int   duration_;
 	
 	float average(float fromFq, float toFq);
+	int   peak(float fromFq, float toFq);
 
 public:
 	/**
@@ -43,6 +52,8 @@ public:
 			    int                    snapshotLength,
 			    float                  leftFrequency,
 			    float                  rightFrequency,
+			    float                  minDetectionFq,
+			    float                  maxDetectionFq,
 			    float                  minNoiseFq,
 			    float                  maxNoiseFq) :
 		SnapshotRecorder(backend, snapshotLength, leftFrequency, rightFrequency),
@@ -50,10 +61,21 @@ public:
 		maxNoiseFq_(maxNoiseFq),
 		lowNoiseBin_(0),
 		noiseWidth_(0),
-		bolidDetected_(false)
+		minDetectFq_(minDetectionFq),
+		maxDetectFq_(maxDetectionFq),
+		bolidDetected_(false),
+		bolidRecord_(false),
+		duration_(0)
 	{
-		int minFqBin = backend_->frequencyToBin(minNoiseFq_);
-		int maxFqBin = backend_->frequencyToBin(maxNoiseFq_);
+		ORDER_PAIR(minDetectFq_, maxDetectFq_);
+		int minFqBin = backend_->frequencyToBin(minDetectFq_);
+		int maxFqBin = backend_->frequencyToBin(maxDetectFq_);
+		ORDER_PAIR(minFqBin, maxFqBin);
+		lowDetectBin_ = minFqBin;
+		detectWidth_  = maxFqBin - minFqBin;
+		
+		minFqBin = backend_->frequencyToBin(minNoiseFq_);
+		maxFqBin = backend_->frequencyToBin(maxNoiseFq_);
 		
 		lowNoiseBin_ = min(minFqBin, maxFqBin);
 		noiseWidth_  = max(minFqBin, maxFqBin) - lowNoiseBin_;
@@ -63,6 +85,8 @@ public:
 	 * Destructor.
 	 */
 	virtual ~BolidRecorder() {}
+	
+	virtual string getFileName(WFTime time);
 	
 	virtual void start();
 	virtual void update();

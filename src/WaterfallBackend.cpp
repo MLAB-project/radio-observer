@@ -153,18 +153,19 @@ void SnapshotRecorder::write(Snapshot snapshot)
 	
 	float fftSampleRate = backend_->getFFTSampleRate();
 	
-	char *fileName = new char[1024];
-	sprintf(fileName, "!snapshot_%s_%s.fits",
-		   origin.c_str(),
-		   time.format("%Y_%m_%d_%H_%M_%S").c_str());
+	string fileName = getFileName(time);
+	//char *fileName = new char[1024];
+	//sprintf(fileName, "!snapshot_%s_%s.fits",
+	//	   origin.c_str(),
+	//	   time.format("%Y_%m_%d_%H_%M_%S").c_str());
 	
 	//int status = 0;
 	//fitsfile *fptr;
 	FITSWriter w;
 	
-	LOG_INFO("Writing snapshot \"" << (fileName + 1) << "\"...");
+	LOG_INFO("Writing snapshot \"" << (fileName.c_str() + 1) << "\"...");
 	
-	if (!w.open(fileName))
+	if (!w.open(fileName.c_str()))
 		return;
 	//fits_create_file(&fptr, fileName, &status);
 	//if (status) {
@@ -207,8 +208,8 @@ void SnapshotRecorder::write(Snapshot snapshot)
 	
 	w.writeHeader("CTYPE1", "FREQ",                             "in Hz");
 	w.writeHeader("CRPIX1", 1.f,                                ""     );
-	w.writeHeader("CRVAL1", (float)rightFrequency_,             ""     );
-	w.writeHeader("CDELT1", (float)-backend_->binToFrequency(), ""     );
+	w.writeHeader("CRVAL1", (float)leftFrequency_,              ""     );
+	w.writeHeader("CDELT1", (float)backend_->binToFrequency(),  ""     );
 	//writeHeader(fptr, "CTYPE1", "FREQ",                            "in Hz", &status);
 	//writeHeader(fptr, "CRPIX1", 1.f,                               "",      &status);
 	//writeHeader(fptr, "CRVAL1", (float)leftFrequency_,             "",      &status);
@@ -255,9 +256,30 @@ void SnapshotRecorder::write(Snapshot snapshot)
 	//	//cerr << "ERROR: Failed to close FITS file (code: " << status << ")." << endl;
 	//}
 	
-	delete [] fileName;
+	//delete [] fileName;
 	
 	LOG_DEBUG("Finished writing snapshot.");
+}
+
+
+string SnapshotRecorder::getFileName(WFTime time)
+{
+	string typ("snapshot");
+	string origin = backend_->getOrigin();
+	return getFileName(typ, origin, time);
+}
+
+
+string SnapshotRecorder::getFileName(const string &typ,
+							  const string &origin,
+							  WFTime       time)
+{
+	char fileName[1024];
+	sprintf(fileName, "!%s_%s_%s.fits",
+		   typ.c_str(),
+		   origin.c_str(),
+		   time.format("%Y_%m_%d_%H_%M_%S").c_str());
+	return string(fileName);
 }
 
 
