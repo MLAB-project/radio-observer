@@ -8,6 +8,8 @@
 
 #include "App.h"
 
+#include "BolidRecorder.h"
+
 
 Ref<Frontend> App::createFrontend()
 {
@@ -54,6 +56,15 @@ Ref<Backend> App::createBackend()
 		config()->get("iq_gain", "0")->asFloat());
 	backend->setPhaseShift(
 		config()->get("iq_phase_shift", "0")->asInteger());
+	
+	backend->addRecorder(new BolidRecorder(
+		backend,
+		config()->get("waterfall_snapshot_length", "1")->asFloat(),
+		config()->get("waterfall_left_freq",   "10300")->asFloat(),
+		config()->get("waterfall_right_freq",  "10900")->asFloat(),
+		config()->get("noise_low_freq",        "9000")->asFloat(),
+		config()->get("noise_hi_freq",         "9600")->asFloat()
+	));
 	
 	return backend;
 }

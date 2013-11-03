@@ -141,6 +141,10 @@ void SnapshotRecorder::startWriting()
 void SnapshotRecorder::write(Snapshot snapshot)
 {
 	// WFTime time = outBuffer_.times[0];
+	// TODO: This is a hotfix, needs to be debugged and fixed later.
+	// Original code:
+	// WFTime time = outBuffer_.times[0];
+	// Hotfix:
 	WFTime time   = WFTime::now();
 	string origin = backend_->getOrigin();
 	
@@ -287,14 +291,28 @@ void SnapshotRecorder::start()
 	if (leftFrequency_ == rightFrequency_) {
 		StreamInfo info = backend_->getStreamInfo();
 		
-		leftFrequency_  = -(float)info.sampleRate;
-		rightFrequency_ =  (float)info.sampleRate;
+		leftFrequency_ = -(float)info.sampleRate / 2.0;
+		rightFrequency_ = (float)info.sampleRate / 2.0;
 		leftBin_  = 0;
 		rightBin_ = backend_->getBins();
 	} else {
 		leftBin_  = backend_->frequencyToBin(leftFrequency_);
 		rightBin_ = backend_->frequencyToBin(rightFrequency_);
+		//leftBin_  = frequencyToBin(leftFrequency_);
+		//rightBin_ = frequencyToBin(rightFrequency_);
 	}
+	
+	//if (leftFrequency_ == rightFrequency_) {
+	//	StreamInfo info = backend_->getStreamInfo();
+	//	
+	//	leftFrequency_  = -(float)info.sampleRate;
+	//	rightFrequency_ =  (float)info.sampleRate;
+	//	leftBin_  = 0;
+	//	rightBin_ = backend_->getBins();
+	//} else {
+	//	leftBin_  = backend_->frequencyToBin(leftFrequency_);
+	//	rightBin_ = backend_->frequencyToBin(rightFrequency_);
+	//}
 	
 	nextSnapshot_ = Snapshot(0);
 	workerThread_ = new Thread(this, &SnapshotRecorder::threadMethod);
@@ -519,20 +537,40 @@ void WaterfallBackend::processFFT(const fftw_complex *data, int size, DataInfo i
 {
 	//float *row = inBuffer_.addRow(info.timeOffset);
 	float *row = buffer_.push();
+	int    halfSize = size / 2;
 	
-	int halfSize = size / 2;
+	// Left half (0 -- half)
 	for (int i = 0; i < halfSize; i++) {
-		row[halfSize - i - 1] = sqrt(
+		row[halfSize + i] = sqrt(
 			data[i][0] * data[i][0] +
 			data[i][1] * data[i][1]
 		);
 	}
+	
+	// Right half (half -- size)
 	for (int i = halfSize; i < size; i++) {
-		row[size - (i - halfSize) - 1] = sqrt(
+		row[i - halfSize] = sqrt(
 			data[i][0] * data[i][0] +
 			data[i][1] * data[i][1]
 		);
 	}
+	
+	//// Left half (0 -- half)
+	//for (int i = 0; i < halfSize; i++) {
+	//	row[halfSize - i - 1] = sqrt(
+	//		data[i][0] * data[i][0] +
+	//		data[i][1] * data[i][1]
+	//	);
+	//}
+	//
+	//// Right half (half -- size)
+	//for (int i = halfSize; i < size; i++) {
+	//	row[size - (i - halfSize) - 1] = sqrt(
+	//		data[i][0] * data[i][0] +
+	//		data[i][1] * data[i][1]
+	//	);
+	//}
+	
 	//for (int i = 0; i < size; i++) {
 	//	row[i] = sqrt(
 	//		data[i][0] * data[i][0] +
@@ -566,12 +604,10 @@ WaterfallBackend::WaterfallBackend(int    bins,
 	//leftFrequency_((leftFrequency < rightFrequency) ? leftFrequency : rightFrequency),
 	//rightFrequency_((leftFrequency > rightFrequency) ? leftFrequency : rightFrequency)
 {
-	recorders_.push_back(new SnapshotRecorder(this,
-									  &buffer_,
-									  &bufferMutex_,
-									  snapshotLength,
-									  leftFrequency,
-									  rightFrequency));
+	addRecorder(new SnapshotRecorder(this,
+							   snapshotLength,
+							   leftFrequency,
+							   rightFrequency));
 	
 	//timeBuffer_.resize(bufferSize_);
 	//LOG_DEBUG("Waterfall backend: buffer size = " << bufferSize << ", bins = " << bins_);
@@ -591,6 +627,13 @@ WaterfallBackend::~WaterfallBackend()
 	//}
 	//delete [] buffer_;
 	//buffer_ = NULL;
+}
+
+
+void WaterfallBackend::addRecorder(Recorder *recorder)
+{
+	recorders_.push_back(recorder);
+	recorder->setBuffer(&buffer_, &bufferMutex_);
 }
 
 
@@ -639,6 +682,16 @@ void WaterfallBackend::startStream(StreamInfo info)
 	//snapshotThread_ =
 	//	new MethodThread<void, WaterfallBackend>(this,
 	//									 &WaterfallBackend::snapshotThread);
+	
+//	if (leftFrequency_ == rightFrequency_) {
+//		leftFrequency_ = -(float)info.sampleRate / 2.0;
+//		rightFrequency_ = (float)info.sampleRate / 2.0;
+//		leftBin_  = 0;
+//		rightBin_ = bins_;
+//	} else {
+//		leftBin_  = frequencyToBin(leftFrequency_);
+//		rightBin_ = frequencyToBin(rightFrequency_);
+//	}
 	
 	FOR_EACH(recorders_, it) {
 		(*it)->start();

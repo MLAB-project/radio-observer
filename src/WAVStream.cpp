@@ -20,6 +20,15 @@ const char *WAVFormat::DATA_SUBCHUNK_ID = "data";
 /**
  *
  */
+uint32_t WAVStream::readUInt32()
+{
+	return readScalar<uint32_t>();
+}
+
+
+/**
+ *
+ */
 int32_t WAVStream::readInt32()
 {
 	return readScalar<int32_t>();
@@ -50,7 +59,7 @@ string WAVStream::readString(int length)
 /**
  *
  */
-void WAVStream::readFormatSubchunk(int size)
+bool WAVStream::readFormatSubchunk(int64_t size)
 {
 	format_.audioFormat = readInt16();
 	format_.channelCount = readInt16();
@@ -60,24 +69,42 @@ void WAVStream::readFormatSubchunk(int size)
 	format_.bitsPerSample = readInt16();
 	
 	streamInfo_.sampleRate = format_.sampleRate;
+	
+	LOG_INFO(
+		"WAV format: audioFormat=" << format_.audioFormat <<
+		", channelCount="          << format_.channelCount <<
+		", sampleRate="            << format_.sampleRate <<
+		", byteRate="              << format_.byteRate <<
+		", blockAlign="            << format_.blockAlign <<
+		", bitsPerSample="         << format_.bitsPerSample
+	);
+
+	return true;
 }
 
 
 /**
  *
  */
-void WAVStream::readInf1Subchunk(int size)
+bool WAVStream::readInf1Subchunk(int64_t size)
 {
 	inf1_ = readString(size);
-	cerr << inf1_ << endl;
+	LOG_INFO("INF1 subchunk found: " << inf1_);
+	
+	return true;
 }
 
 
 /**
  *
  */
-void WAVStream::readDataSubchunk(int size)
+bool WAVStream::readDataSubchunk(int64_t size)
 {
+	if (format_.bitsPerSample != 16) {
+		LOG_ERROR("Can only read 16 bits per sample! Stopping now.");
+		return false;
+	}
+	
 	int rawBufferSize = dataBufferSize_ * format_.blockAlign;
 	int bufferCount = size / rawBufferSize;
 	int bufferRemainder = size % rawBufferSize;
@@ -94,15 +121,6 @@ void WAVStream::readDataSubchunk(int size)
 		}
 		
 		process(outputBuffer_);
-		//if (backend_.isNotNull()) {
-		//	backend_->process(outputBuffer_, dataInfo_);
-		//}
-		
-		//dataInfo_.offset += outputBuffer_.size();
-		//dataInfo_.timeOffset = dataInfo_.timeOffset.addSamples(
-		//	outputBuffer_.size(),
-		//	streamInfo_.sampleRate
-		//);
 	}
 	
 	if (bufferRemainder > 0) {
@@ -118,26 +136,19 @@ void WAVStream::readDataSubchunk(int size)
 		}
 
 		process(outputBuffer_);
-		
-		//if (backend_.isNotNull()) {
-		//	backend_->process(outputBuffer_, dataInfo_);
-		//}
-
-		//dataInfo_.offset += outputBuffer_.size();
-		//dataInfo_.timeOffset = dataInfo_.timeOffset.addSamples(
-		//	outputBuffer_.size(),
-		//	streamInfo_.sampleRate
-		//);
 	}
+	
+	return true;
 }
 
 
 /**
  *
  */
-void WAVStream::readUnknownSubchunk(int size)
+bool WAVStream::readUnknownSubchunk(int64_t size)
 {
 	input_->getStream()->ignore(size);
+	return true;
 }
 
 
@@ -147,14 +158,15 @@ void WAVStream::readUnknownSubchunk(int size)
 int WAVStream::readSubchunk()
 {
 	string subchunkId = readString(4);
-	int size = readInt32();
+	int64_t size = (int64_t)readUInt32();
 	
 	//cerr << "CHUNK " << subchunkId << ", SIZE = " << size << endl;
+	LOG_DEBUG("WAVStream: Chunk " << subchunkId << ", SIZE = " << size << endl);
 	
 	if (subchunkId.compare(WAVFormat::FORMAT_SUBCHUNK_ID) == 0) {
-		readFormatSubchunk(size);
+		if (!readFormatSubchunk(size)) return -1;
 	} else if (subchunkId.compare(WAVFormat::INF1_SUBCHUNK_ID) == 0) {
-		readInf1Subchunk(size);
+		if (!readInf1Subchunk(size)) return -1;
 	} else if (subchunkId.compare(WAVFormat::DATA_SUBCHUNK_ID) == 0) {
 		if (!dataRead_) {
 			startStream();
@@ -162,9 +174,9 @@ int WAVStream::readSubchunk()
 			//	backend_->startStream(streamInfo_);
 			dataRead_ = true;
 		}
-		readDataSubchunk(size);
+		if (!readDataSubchunk(size)) return -1;
 	} else {
-		readUnknownSubchunk(size);
+		if (!readUnknownSubchunk(size)) return -1;
 	}
 	
 	return size + 4;
@@ -195,15 +207,22 @@ void WAVStream::run()
 	
 	string chunkId = readString(4);
 	if (chunkId.compare(WAVFormat::CHUNK_ID) != 0) {
-		cerr << "ERROR: Invalid chunk ID. Stream may not be in WAV format." << endl;
+		LOG_ERROR("Invalid chunk ID. Stream may not be in WAV format." << endl);
+		//cerr << "ERROR: Invalid chunk ID. Stream may not be in WAV format." << endl;
 		return;
 	}
 	
-	int32_t chunkSize = readInt32();
+	int64_t chunkSize = (int64_t)readUInt32();
+	//if (chunkSize <= 0) {
+	//	LOG_ERROR("Invalid chunk size: " << chunkSize << ". Exiting...");
+	//	return;
+	//}
+	LOG_DEBUG("Chunk size: " << chunkSize << endl);
 	
 	string chunkFormat = readString(4);
 	if (chunkFormat.compare(WAVFormat::CHUNK_FORMAT) != 0) {
-		cerr << "ERROR: Invalid chunk format. Stream may not be in WAV format." << endl;
+		LOG_ERROR("Invalid chunk format. Stream may not be in WAV format." << endl);
+		//cerr << "ERROR: Invalid chunk format. Stream may not be in WAV format." << endl;
 		return;
 	}
 	
@@ -215,12 +234,14 @@ void WAVStream::run()
 	dataInfo_ = DataInfo();
 	
 	while (chunkSize > 0) {
-		chunkSize -= readSubchunk();
+		int size = readSubchunk();
+		if (size < 0) break;
+		chunkSize -= size;
 	}
 	
-	endStream();
-	//if (backend_.isNotNull())
-	//	backend_->endStream();
+	// Only end stream if it has been started in the first place.
+	if (dataRead_)
+		endStream();
 }
 
 

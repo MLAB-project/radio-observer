@@ -14,6 +14,7 @@
 #include "FITSWriter.h"
 #include "RingBuffer.h"
 #include "Channel.h"
+#include "utils.h"
 
 #include <cmath>
 
@@ -190,18 +191,22 @@ protected:
 	Mutex                 *bufferMutex_;
 	
 public:
-	Recorder(Ref<WaterfallBackend>  backend,
-		    RingBuffer2D<float>   *buffer,
-		    Mutex                 *bufferMutex) :
+	Recorder(Ref<WaterfallBackend>  backend):
 		backend_(backend),
-		buffer_(buffer),
-		bufferMutex_(bufferMutex)
+		buffer_(NULL),
+		bufferMutex_(NULL)
 	{}
 	
 	virtual ~Recorder() {
 		backend_     = NULL;
 		buffer_      = NULL;
 		bufferMutex_ = NULL;
+	}
+	
+	void setBuffer(RingBuffer2D<float> *buffer, Mutex *bufferMutex)
+	{
+		buffer_      = buffer;
+		bufferMutex_ = bufferMutex;
 	}
 	
 	virtual int requestBufferSize() { return 0; }
@@ -257,16 +262,16 @@ protected:
 
 public:
 	SnapshotRecorder(Ref<WaterfallBackend>  backend,
-				  RingBuffer2D<float>   *buffer,
-				  Mutex                 *bufferMutex,
 				  int                    snapshotLength,
 				  float                  leftFrequency,
 				  float                  rightFrequency) :
-		Recorder(backend, buffer, bufferMutex),
+		Recorder(backend),
 		snapshotLength_(snapshotLength),
 		leftFrequency_(leftFrequency),
 		rightFrequency_(rightFrequency)
-	{}
+	{
+		ORDER_PAIR(leftFrequency_, rightFrequency_);
+	}
 	
 	virtual ~SnapshotRecorder() {}
 	
@@ -351,6 +356,8 @@ public:
 	virtual ~WaterfallBackend();
 	
 	string getOrigin() { return origin_; }
+	
+	void addRecorder(Recorder *recorder);
 	
 	virtual void startStream(StreamInfo info);
 	virtual void endStream();

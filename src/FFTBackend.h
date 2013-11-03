@@ -93,30 +93,50 @@ public:
 	virtual void process(const vector<Complex> &data, DataInfo info);
 	virtual void endStream();
 	
-	float binToFrequency(int bin) const
+	inline float binToFrequency(int bin) const
 	{
-		return (
-			(float)streamInfo_.sampleRate *
-			((2.0 * ((float)bin / (float)bins_)) - 1.0)
-		);
+		//return (
+		//	(float)streamInfo_.sampleRate *
+		//	((2.0 * ((float)bin / (float)bins_)) - 1.0)
+		//);
+
+		float b = (float)bin;
+		float sr = (float)streamInfo_.sampleRate;
+		float n = (float)bins_;
+		
+		return sr * (-0.5 + b / n);
+		//return (b * sr) / n;
 	}
 	
 	float binToFrequency() const
 	{
-		return (
-			(2.0 / (float)bins_) * (float)streamInfo_.sampleRate
-		);
+		return (binToFrequency(1) - binToFrequency(0));
+		
+		//return (
+		//	(float)streamInfo_.sampleRate *
+		//	(2.0 / (float)bins_)
+		//);
 	}
-
+	
 	int frequencyToBin(float frequency) const
 	{
-		int bin = (
-			(float)bins_ * 0.5 *
-			((frequency / (float)streamInfo_.sampleRate) + 1.0)
-		);
+		//int bin = (
+		//	(float)bins_ * 0.5 *
+		//	((frequency / (float)streamInfo_.sampleRate) + 1.0)
+		//);
+		//if (bin < 0) return 0;
+		//if (bin >= bins_) return bins_ - 1;
+		//return bin;
+		
+		float sr = (float)streamInfo_.sampleRate;
+		float n = (float)bins_;
+		
+		int bin = n * ((frequency / sr) + 0.5);
 		if (bin < 0) return 0;
 		if (bin >= bins_) return bins_ - 1;
 		return bin;
+		
+		//return (frequency * n) / sr;
 	}
 };
 
