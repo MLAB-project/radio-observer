@@ -110,6 +110,29 @@ inline WFTime operator+(const WFTime& lhs, const WFTime& rhs)
 }
 
 
+inline WFTime operator-(const WFTime& lhs, const WFTime& rhs)
+{
+	WFTime result;
+	timersub(&(lhs.time), &(rhs.time), &(result.time));
+	return result;
+}
+
+
+inline bool operator>(const WFTime& lhs, const WFTime& rhs)
+{
+	return timercmp(&(lhs.time), &(rhs.time), >);
+}
+
+inline bool operator<(const WFTime& lhs, const WFTime& rhs)
+{
+	return timercmp(&(lhs.time), &(rhs.time), <);
+}
+
+inline bool operator!=(const WFTime& lhs, const WFTime& rhs)
+{
+	return timercmp(&(lhs.time), &(rhs.time), !=);
+}
+
 inline WFTime operator*(const WFTime& lhs, float rhs)
 {
 	WFTime result = lhs;

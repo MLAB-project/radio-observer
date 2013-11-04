@@ -41,7 +41,6 @@ protected:
 	int   duration_;
 	
 	float average(float fromFq, float toFq);
-	int   peak(float fromFq, float toFq);
 
 public:
 	/**
@@ -92,7 +91,7 @@ public:
 	virtual void update();
 	
 	static float noise(float *buffer, int length);
-	static float peak(float *buffer, int length);
+	static int   peak(float *buffer, int length);
 	static float average(float *buffer, int length);
 };
 

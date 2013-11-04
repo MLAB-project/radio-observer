@@ -78,6 +78,9 @@ Ref<Backend> App::createBackend()
 void App::setUp()
 {
 	AppBase::setUp();
+	
+	//Logger::clearConfig();
+	//Logger::addOutput(LOG_LVL_DEBUG, "waterfall.log");
 }
 
 
@@ -87,9 +90,6 @@ void App::setUp()
 int App::onRun()
 {
 	AppBase::onRun();
-	
-	Logger::clearConfig();
-	Logger::addOutput(LOG_LVL_INFO, "-");
 	
 	config()->dump(cerr);
 	

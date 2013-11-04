@@ -140,5 +140,39 @@ public:
 	}
 };
 
+
+enum FFTCoordType {
+	FFT_COORD_BIN,
+	FFT_COORD_FREQ
+};
+
+
+struct FFTCoord {
+	FFTCoordType type;
+	union {
+		float freq;
+		int   bin;
+	};
+	
+	FFTCoord() : type(FFT_COORD_BIN), bin(0) {}
+	FFTCoord(float freq) : type(FFT_COORD_FREQ), freq(freq) {}
+	FFTCoord(int   bin)  : type(FFT_COORD_BIN),  bin(bin)   {}
+	
+	inline float toFreq(const FFTBackend &backend) const {
+		if (type == FFT_COORD_FREQ)
+			return freq;
+		
+		return backend.binToFrequency(bin);
+	}
+	
+	inline int toBin(const FFTBackend &backend) const {
+		if (type == FFT_COORD_BIN)
+			return bin;
+		
+		return backend.frequencyToBin(freq);
+	}
+};
+
+
 #endif /* end of include guard: FFTBACKEND_QYQ7WJUZ */
 

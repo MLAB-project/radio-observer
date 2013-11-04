@@ -264,7 +264,7 @@ void SnapshotRecorder::write(Snapshot snapshot)
 
 string SnapshotRecorder::getFileName(WFTime time)
 {
-	string typ("snapshot");
+	string typ("snap");
 	string origin = backend_->getOrigin();
 	return getFileName(typ, origin, time);
 }
@@ -275,10 +275,11 @@ string SnapshotRecorder::getFileName(const string &typ,
 							  WFTime       time)
 {
 	char fileName[1024];
-	sprintf(fileName, "!%s_%s_%s.fits",
+	sprintf(fileName, "!%s_%s_%s%3d.fits",
 		   typ.c_str(),
 		   origin.c_str(),
-		   time.format("%Y_%m_%d_%H_%M_%S").c_str());
+		   time.format("%Y%m%d%H%M%S").c_str(),
+		   (int)(time.microseconds() / 1000));
 	return string(fileName);
 }
 
