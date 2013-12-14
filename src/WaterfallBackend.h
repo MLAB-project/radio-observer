@@ -300,51 +300,10 @@ private:
 	
 	string           origin_;
 	
-	/// Snapshot length in seconds (determines the size of the buffer).
-	//float            snapshotLength_;
-	
-	//WaterfallBuffer  inBuffer_;
-	//WaterfallBuffer  outBuffer_;
 	RingBuffer2D<float> buffer_;
 	Mutex               bufferMutex_;
 	
 	vector<Ref<Recorder> > recorders_;
-	
-	//float            leftFrequency_;
-	//float            rightFrequency_;
-	//int              leftBin_;
-	//int              rightBin_;
-	//
-	//MethodThread<void, WaterfallBackend> *snapshotThread_;
-	//Mutex                                 mutex_;
-	//Condition                             snapshotCondition_;
-	//bool                                  endSnapshotThread_;
-	
-	//void writeHeader(fitsfile   *file,
-	//			  const char *keyword,
-	//			  int         type,
-	//			  void       *value,
-	//			  const char *comment,
-	//			  int        *status);
-	//void writeHeader(fitsfile   *file,
-	//			  const char *keyword,
-	//			  const char *value,
-	//			  const char *comment,
-	//			  int        *status);
-	//void writeHeader(fitsfile   *file,
-	//			  const char *keyword,
-	//			  float       value,
-	//			  const char *comment,
-	//			  int        *status);
-	//void writeHeader(fitsfile   *file,
-	//			  const char *keyword,
-	//			  int         value,
-	//			  const char *comment,
-	//			  int        *status);
-	
-	//void* snapshotThread();
-	//void  makeSnapshot();
-	//void  startSnapshot();
 
 protected:
 	virtual void processFFT(const fftw_complex *data, int size, DataInfo info);

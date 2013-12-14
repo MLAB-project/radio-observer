@@ -53,7 +53,7 @@ void BolidRecorder::update()
 		(int)(backend_->frequencyToBin(200) - backend_->frequencyToBin(0))
 	);
 	
-	LOG_DEBUG("n = " << n << ",  p = " << p << ",  a = " << a << ",  detect = " << (a > (n * 6.3)));
+	// LOG_DEBUG("n = " << n << ",  p = " << p << ",  a = " << a << ",  detect = " << (a > (n * 6.3)));
 	
 	if (a > (n * 6.3)) {
 		duration_ += 1;

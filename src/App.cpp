@@ -13,16 +13,6 @@
 
 Ref<Frontend> App::createFrontend()
 {
-	//Ref<Input> input;
-	//
-	//if (options().args().size() > 0) {
-	//	input = new FileInput(options().args()[0]);
-	//} else {
-	//	input = new StandardInput();
-	//}
-	//
-	//return new WAVStream(input);
-	
 	if (options().args().size() > 0) {
 		string fileName = options().args()[0];
 		LOG_INFO("Using WAV frontend, reading " << fileName << "...");
