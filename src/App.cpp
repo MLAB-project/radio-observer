@@ -35,11 +35,11 @@ Ref<Backend> App::createBackend()
 		cfg->get("fft_bins",    "32768")->asInteger(),
 		cfg->get("fft_overlap", "24576")->asInteger(),
 		
-		config()->get("location_name",         "unknown")->asString(),
-		// config()->get("waterfall_buffer_size", "10000")->asInteger(),
-		config()->get("waterfall_snapshot_length", "1")->asFloat(),
-		config()->get("waterfall_left_freq",   "8000")->asFloat(),
-		config()->get("waterfall_right_freq",  "12000")->asFloat()
+		config()->get("location_name",             "unknown")->asString(),
+		// config()->get("waterfall_buffer_size",       "10000")->asInteger(),
+		config()->get("waterfall_snapshot_length",       "1")->asFloat(),
+		config()->get("waterfall_left_freq",          "8000")->asFloat(),
+		config()->get("waterfall_right_freq",        "12000")->asFloat()
 	);
 	
 	backend->setGain(
@@ -47,16 +47,27 @@ Ref<Backend> App::createBackend()
 	backend->setPhaseShift(
 		config()->get("iq_phase_shift", "0")->asInteger());
 	
-	backend->addRecorder(new BolidRecorder(
-		backend,
-		config()->get("waterfall_snapshot_length", "1")->asFloat(),
-		config()->get("bolid_left_freq",         "9000")->asFloat(),
-		config()->get("bolid_right_freq",        "11000")->asFloat(),
-		config()->get("bolid_detect_left_freq",  "10300")->asFloat(),
-		config()->get("bolid_detect_right_freq", "10900")->asFloat(),
-		config()->get("noise_low_freq",          "9000")->asFloat(),
-		config()->get("noise_hi_freq",           "9600")->asFloat()
-	));
+	if (config()->get("record_snapshots", "true")->asBool()) {
+		backend->addRecorder(new SnapshotRecorder(
+			backend,
+			config()->get("waterfall_snapshot_length",       "1")->asFloat(),
+			config()->get("waterfall_left_freq",          "8000")->asFloat(),
+			config()->get("waterfall_right_freq",        "12000")->asFloat()
+		));
+	}
+	
+	if (config()->get("detect_bolids", "true")->asBool()) {
+		backend->addRecorder(new BolidRecorder(
+			backend,
+			config()->get("waterfall_snapshot_length",     "1")->asFloat(),
+			config()->get("bolid_left_freq",            "9000")->asFloat(),
+			config()->get("bolid_right_freq",          "11000")->asFloat(),
+			config()->get("bolid_detect_left_freq",    "10300")->asFloat(),
+			config()->get("bolid_detect_right_freq",   "10900")->asFloat(),
+			config()->get("noise_low_freq",             "9000")->asFloat(),
+			config()->get("noise_hi_freq",              "9600")->asFloat()
+		));
+	}
 	
 	return backend;
 }

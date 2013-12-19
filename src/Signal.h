@@ -23,6 +23,8 @@ using namespace cppapp;
 
 class SignalCallback {
 public:
+	virtual ~SignalCallback() {}
+	
 	virtual void call(int signNum) = 0;
 };
 

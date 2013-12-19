@@ -439,10 +439,10 @@ WaterfallBackend::WaterfallBackend(int    bins,
 	FFTBackend(bins, overlap),
 	origin_(origin)
 {
-	addRecorder(new SnapshotRecorder(this,
-							   snapshotLength,
-							   leftFrequency,
-							   rightFrequency));
+	//addRecorder(new SnapshotRecorder(this,
+	//						   snapshotLength,
+	//						   leftFrequency,
+	//						   rightFrequency));
 }
 
 
