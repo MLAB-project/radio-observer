@@ -15,6 +15,8 @@
 
 /**
  * \todo Write documentation for class BolidRecorder.
+ *
+ * Recommended FFT bin settings for this recorder is: 32728 bins, 31704 bin (fft window) overlap.
  */
 class BolidRecorder : public SnapshotRecorder {
 private:
@@ -91,7 +93,13 @@ public:
 	virtual void update();
 	
 	static float noise(float *buffer, int length);
+	/**
+	 * @brief Returns the index of a maximal value in a float buffer.
+	 */
 	static int   peak(float *buffer, int length);
+	/**
+	 * @brief Returns the average value of all elements of a float buffer.
+	 */
 	static float average(float *buffer, int length);
 };
 

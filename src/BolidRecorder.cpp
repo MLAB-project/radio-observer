@@ -33,6 +33,18 @@ string BolidRecorder::getFileName(WFTime time)
 
 void BolidRecorder::start()
 {
+	int minFqBin = backend_->frequencyToBin(minDetectFq_);
+	int maxFqBin = backend_->frequencyToBin(maxDetectFq_);
+	ORDER_PAIR(minFqBin, maxFqBin);
+	lowDetectBin_ = minFqBin;
+	detectWidth_  = maxFqBin - minFqBin;
+	
+	minFqBin = backend_->frequencyToBin(minNoiseFq_);
+	maxFqBin = backend_->frequencyToBin(maxNoiseFq_);
+		
+	lowNoiseBin_ = min(minFqBin, maxFqBin);
+	noiseWidth_  = max(minFqBin, maxFqBin) - lowNoiseBin_;
+	
 	LOG_INFO("Bolid detector starting...");
 	LOG_INFO("Freq.: " << leftFrequency_ << "-" << rightFrequency_ <<
 		    ", detect. freq.: " << minDetectFq_ << "-" << maxDetectFq_ <<
@@ -49,13 +61,34 @@ void BolidRecorder::update()
 	float n = noise(row + lowNoiseBin_, noiseWidth_);
 	int   p = peak(row + lowDetectBin_, detectWidth_);
 	float a = average(
-		row + lowDetectBin_ + (p - (int)(backend_->frequencyToBin(100) - backend_->frequencyToBin(0))),
-		(int)(backend_->frequencyToBin(200) - backend_->frequencyToBin(0))
+		row + lowDetectBin_ + (p - (int)(backend_->frequencyToBin(20) - backend_->frequencyToBin(0))),
+		(int)(backend_->frequencyToBin(40) - backend_->frequencyToBin(0))
 	);
 	
-	LOG_DEBUG("n = " << n << ",  p = " << p << ",  a = " << a << ",  detect = " << (a > (n * 6.3)));
+	float peak_f = backend_->binToFrequency(lowDetectBin_ + p);
+	//if (a > (n * 6.3)) {
+	//	std::cerr << "\rDETECTED  " << peak_f << " Hz         ";
+	//} else {
+	//	std::cerr << "\r          " << peak_f << " Hz         ";
+	//}
+	//bool detect = (a > (n + 8.0));
+	//bool detect = (a > (n * 6.3));
+	bool detect = (a > (n * 2.0));
+	if (detect) {
+		LOG_DEBUG("n = " << std::fixed << std::setprecision(5) << n <<
+				",  p = " << std::setw(5) << p <<
+				",  a = " << a <<
+				",  \033[1;31mdetect = " << detect << "\033[0m");
+		//*output_ << "\033[1;31m" << getFailureCount() << " failure(s)\033[0m, ";
+	} else {
+		LOG_DEBUG("n = " << std::fixed << std::setprecision(5) << n <<
+				",  p = " << std::setw(5) << p <<
+				",  a = " << a <<
+				",  detect = " << detect);
+	}
 	
-	if (a > (n * 6.3)) {
+	//if (a > (n * 6.3)) {
+	if (detect) {
 		duration_ += 1;
 		
 		if (!bolidDetected_) {	
@@ -66,7 +99,8 @@ void BolidRecorder::update()
 	} else if (bolidDetected_) {
 		bolidDetected_ = false;
 		LOG_WARNING("********** METEOR DETECTED **********");
-		LOG_INFO("Magnitude: "  << a <<
+		LOG_INFO("Frequency: " << peak_f <<
+			    ", magnitude: "  << a <<
 			    ", duration: " << duration_);
 		duration_ = 0;
 	}
@@ -83,7 +117,12 @@ void BolidRecorder::update()
 
 int compareFloat(const void *a, const void *b)
 {
-	return ( *(float*)a - *(float*)b );
+	float c = ( *(float*)a - *(float*)b );
+	if (c > 0.0)
+		return 1;
+	if (c < 0.0)
+		return -1;
+	return 0;
 }
 
 
@@ -92,6 +131,8 @@ float BolidRecorder::noise(float *buffer, int length)
 	qsort(buffer, length, sizeof(float), compareFloat);
 	int quartile = length / 4;
 	return buffer[quartile] * 2.0; // * 2 == 3dB
+	//return log10(buffer[quartile] * 2.0); // * 2 == 3dB
+	//return log10(buffer[quartile]) + 3.0; // * 2 == 3dB
 }
 
 
@@ -115,6 +156,7 @@ float BolidRecorder::average(float *buffer, int length)
 	double result = 0.0;
 	
 	for (float *v = buffer; v < (buffer + length); v++)
+		//result += log10((double)*v);
 		result += (double)*v;
 	
 	return (float)(result / (double)length);

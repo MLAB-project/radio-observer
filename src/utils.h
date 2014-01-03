@@ -26,10 +26,16 @@ pair<T, T> orderPair(T a, T b)
 
 
 #define ORDER_PAIR(a, b) { \
-	VAR(p, orderPair((a), (b))); \
-	(a) = p.first; \
-	(b) = p.second; \
+	if ((a) > (b)) { \
+		VAR(temp__, (a)); \
+		(a) = (b); \
+		(b) = temp__; \
+	} \
 }
+	//VAR(p, orderPair((a), (b))); \
+	//(a) = p.first; \
+	//(b) = p.second; \
+//}
 
 
 #endif /* end of include guard: UTILS_Q7Z8RACX */
