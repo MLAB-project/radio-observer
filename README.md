@@ -16,12 +16,15 @@ Compilation
 -----------
 
 1. Install the following libraries:
-      - libfftw3 (http://www.fftw.org/download.html, `sudo apt-get install libfftw3-dev` on Ubuntu)
-      - cfitsio (http://heasarc.gsfc.nasa.gov/fitsio/, `sudo apt-get install cfitsio-dev` on Ubuntu)
+      - libfftw3 (http://www.fftw.org/download.html
+      - cfitsio (http://heasarc.gsfc.nasa.gov/fitsio/
       - JACK (http://jackaudio.org/download)
+
+`sudo apt-get install libfftw3-dev cfitsio-dev clang`
 
 2. Clone the repository using (for instance):
    `git clone https://github.com/MLAB-project/radio-observer.git`.
+   
 3. Checkout and build the `cppapp` submodule:
         
         $ git submodule init
