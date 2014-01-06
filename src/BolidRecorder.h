@@ -101,6 +101,8 @@ public:
 	 * @brief Returns the average value of all elements of a float buffer.
 	 */
 	static float average(float *buffer, int length);
+	
+	static Ref<DIObject> make(Ref<DynObject> config, Ref<DIObject> parent);
 };
 
 #endif /* end of include guard: BOLIDRECORDER_MKBLQWES */

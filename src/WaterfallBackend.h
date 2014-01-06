@@ -184,7 +184,7 @@ public:
 class WaterfallBackend;
 
 
-class Recorder : public Object {
+class Recorder : public DIObject {
 protected:
 	Ref<WaterfallBackend>  backend_;
 	RingBuffer2D<float>   *buffer_;
@@ -283,6 +283,8 @@ public:
 	virtual void start();
 	virtual void stop();
 	virtual void update();
+	
+	static Ref<DIObject> make(Ref<DynObject> config, Ref<DIObject> parent);
 };
 
 
@@ -311,19 +313,21 @@ protected:
 public:
 	WaterfallBackend(int bins,
 				  int overlap,
-				  string origin,
-				  float snapshotLength,
-				  float leftFrequency,
-				  float rightFrequency);
+				  string origin);
 	virtual ~WaterfallBackend();
 	
 	string getOrigin() { return origin_; }
 	
-	void addRecorder(Recorder *recorder);
+	void addRecorder(Ref<Recorder> recorder);
 	
 	virtual void startStream(StreamInfo info);
 	virtual void endStream();
+	
+	virtual bool injectDependency(Ref<DIObject> obj, std::string key);
+
+	static Ref<DIObject> make(Ref<DynObject> config, Ref<DIObject> parent);
 };
+
 
 #endif /* end of include guard: WATERFALLBACKEND_YGIIIZR2 */
 

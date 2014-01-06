@@ -311,6 +311,8 @@ int SnapshotRecorder::requestBufferSize()
 
 void SnapshotRecorder::start()
 {
+	LOG_INFO("Snapshot recording starting...");
+	
 	if (leftFrequency_ == rightFrequency_) {
 		StreamInfo info = backend_->getStreamInfo();
 		
@@ -368,6 +370,23 @@ void SnapshotRecorder::update()
 		startWriting();
 	}
 }
+
+
+Ref<DIObject> SnapshotRecorder::make(Ref<DynObject> config, Ref<DIObject> parent)
+{
+	int   snapshotLength = config->getStrInt("snapshot_length", 60);
+	float leftFrequency  = config->getStrDouble("low_freq", 0);
+	float rightFrequency = config->getStrDouble("hi_freq",  0);
+	
+	return new SnapshotRecorder(
+		parent,
+		snapshotLength,
+		leftFrequency,
+		rightFrequency
+	);
+}
+
+CPPAPP_DI_METHOD("snapshot", SnapshotRecorder, make);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -432,17 +451,10 @@ void WaterfallBackend::processFFT(const fftw_complex *data, int size, DataInfo i
 
 WaterfallBackend::WaterfallBackend(int    bins,
                                    int    overlap,
-                                   string origin,
-                                   float  snapshotLength,
-                                   float  leftFrequency,
-                                   float  rightFrequency) :
+                                   string origin) :
 	FFTBackend(bins, overlap),
 	origin_(origin)
 {
-	//addRecorder(new SnapshotRecorder(this,
-	//						   snapshotLength,
-	//						   leftFrequency,
-	//						   rightFrequency));
 }
 
 
@@ -455,7 +467,7 @@ WaterfallBackend::~WaterfallBackend()
 }
 
 
-void WaterfallBackend::addRecorder(Recorder *recorder)
+void WaterfallBackend::addRecorder(Ref<Recorder> recorder)
 {
 	recorders_.push_back(recorder);
 	recorder->setBuffer(&buffer_, &bufferMutex_);
@@ -496,5 +508,38 @@ void WaterfallBackend::endStream()
 		(*it)->stop();
 	}
 }
+
+
+bool WaterfallBackend::injectDependency(Ref<DIObject> obj, std::string key)
+{
+	if (key.compare("recorder") == 0) {
+		addRecorder(obj.as<Recorder>());
+	}
+	
+	return FFTBackend::injectDependency(obj, key);
+}
+
+
+Ref<DIObject> WaterfallBackend::make(Ref<DynObject> config, Ref<DIObject> parent)
+{
+	int bins      = config->getStrInt("bins",        32768);
+	int overlap   = config->getStrInt("overlap",         0);
+	string origin = config->getStrString("origin", "debug");
+	
+	Ref<WaterfallBackend> backend = new WaterfallBackend(
+		bins,
+		overlap,
+		origin
+	);
+	
+	backend->setGain(
+		config->getStrDouble("iq_gain", 0));
+	backend->setPhaseShift(
+		config->getStrInt("iq_phase_shift", 0));
+	
+	return backend;
+}
+
+CPPAPP_DI_METHOD("waterfall", WaterfallBackend, make);
 
 

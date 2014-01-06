@@ -11,10 +11,12 @@
 
 #include <cppapp/AppBase.h>
 #include <cppapp/Input.h>
+#include <cppapp/DynObject.h>
 
 using namespace cppapp;
 
 // TODO: Remove later.
+#include "Pipeline.h"
 #include "WAVStream.h"
 #include "JackFrontend.h"
 #include "WaterfallBackend.h"
@@ -26,18 +28,20 @@ using namespace cppapp;
  */
 class App : public AppBase {
 private:
-	// Ref<Input> input_;
+	Ref<DynObject> config_;
 	
 	App(const App& other);
 
 protected:
-	// inline Ref<Input> input() { return input_; }
+	virtual string getDefaultConfigFile();
+	virtual void   readConfig();
 	
-	Ref<Frontend> frontend_;
-	Ref<Backend>  backend_;
+	Ref<Pipeline> pipeline_;
+	//Ref<Frontend> frontend_;
+	//Ref<Backend>  backend_;
 	
 	Ref<Frontend> createFrontend();
-	Ref<Backend>  createBackend();
+	// Ref<Backend>  createBackend();
 	
 	virtual void setUp();
 	virtual int onRun();

@@ -97,16 +97,18 @@ void JackFrontend::run()
 		return;
 	}
 	
-	if (jack_connect(client, leftInputName_, jack_port_name(leftPort_))) {
-		LOG_ERROR("Failed to connect left input port to \"" <<
-				leftInputName_ << "\"!");
-		return;
-	}
-	
-	if (jack_connect(client, rightInputName_, jack_port_name(rightPort_))) {
-		LOG_ERROR("Failed to connect right input port to \"" <<
-				rightInputName_ << "\"!");
-		return;
+	if (connect_) {
+		if (jack_connect(client, leftInputName_, jack_port_name(leftPort_))) {
+			LOG_ERROR("Failed to connect left input port to \"" <<
+					leftInputName_ << "\"!");
+			return;
+		}
+		
+		if (jack_connect(client, rightInputName_, jack_port_name(rightPort_))) {
+			LOG_ERROR("Failed to connect right input port to \"" <<
+					rightInputName_ << "\"!");
+			return;
+		}
 	}
 	
 	// Yep, active waiting. Pretty much.

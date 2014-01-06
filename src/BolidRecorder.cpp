@@ -162,3 +162,33 @@ float BolidRecorder::average(float *buffer, int length)
 	return (float)(result / (double)length);
 }
 
+
+Ref<DIObject> BolidRecorder::make(Ref<DynObject> config, Ref<DIObject> parent)
+{
+	int   snapshotLength = config->getStrInt("snapshot_length",    60);
+	float leftFrequency  = config->getStrDouble("low_freq",      9000);
+	float rightFrequency = config->getStrDouble("hi_freq",      12000);
+	
+	float minDetectFq = config->getStrDouble("low_detect_freq", 10000);
+	float maxDetectFq = config->getStrDouble("hi_detect_freq",  10900);
+	
+	float minNoiseFq = config->getStrDouble("low_noise_freq",    9000);
+	float maxNoiseFq = config->getStrDouble("hi_noise_freq",    10000);
+	
+	return new BolidRecorder(
+		parent,
+		snapshotLength,
+		leftFrequency,
+		rightFrequency,
+		
+		minDetectFq,
+		maxDetectFq,
+		
+		minNoiseFq,
+		maxNoiseFq
+	);
+}
+
+CPPAPP_DI_METHOD("bolid", BolidRecorder, make);
+
+

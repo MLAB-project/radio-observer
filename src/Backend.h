@@ -76,7 +76,7 @@ struct DataInfo {
 /**
  * \todo Write documentation for class Backend.
  */
-class Backend : public Object {
+class Backend : public DIObject {
 private:
 	Backend(const Backend& other);
 

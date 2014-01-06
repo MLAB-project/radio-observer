@@ -1,0 +1,53 @@
+
+{
+	"jack_left_port":  "system:capture_1",
+	"jack_right_port": "system:capture_2",
+	
+	"configuration": "default",
+	
+	"configurations": [
+		{
+			"key":     "default",
+			"factory": "pipeline",
+			
+			"children": [
+				{
+					"key":     "backend",
+					"factory": "waterfall",
+					
+					"bins":    32768,
+					"overlap": 24576,
+					
+					"origin": "debug",
+					
+					"iq_gain":        0,
+					"iq_phase_shift": 0,
+					
+					"children": [
+						{
+							"key":     "recorder",
+							"factory": "snapshot",
+							
+							"snapshot_length": 60,
+							"low_freq":         0,
+							"hi_freq":          0,
+						},
+						{
+							"key":     "recorder",
+							"factory": "bolid",
+							
+							"snapshot_length":    60,
+							"low_freq":         9000,
+							"hi_freq":         11000,
+							"low_detect_freq": 10300,
+							"hi_detect_freq":  10900,
+							"low_noise_freq":   9000,
+							"hi_noise_freq":    9600,
+						},
+					],
+				},
+			],
+		},
+	],
+}
+
