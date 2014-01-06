@@ -32,10 +32,6 @@ pair<T, T> orderPair(T a, T b)
 		(b) = temp__; \
 	} \
 }
-	//VAR(p, orderPair((a), (b))); \
-	//(a) = p.first; \
-	//(b) = p.second; \
-//}
 
 
 #endif /* end of include guard: UTILS_Q7Z8RACX */

@@ -42,6 +42,8 @@ protected:
 	bool  bolidRecord_;
 	int   duration_;
 	
+	vector<float> noiseBuffer_;
+	
 	float average(float fromFq, float toFq);
 
 public:

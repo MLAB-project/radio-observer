@@ -41,9 +41,10 @@ void BolidRecorder::start()
 	
 	minFqBin = backend_->frequencyToBin(minNoiseFq_);
 	maxFqBin = backend_->frequencyToBin(maxNoiseFq_);
-		
+	
 	lowNoiseBin_ = min(minFqBin, maxFqBin);
 	noiseWidth_  = max(minFqBin, maxFqBin) - lowNoiseBin_;
+	noiseBuffer_.resize(noiseWidth_);
 	
 	LOG_INFO("Bolid detector starting...");
 	LOG_INFO("Freq.: " << leftFrequency_ << "-" << rightFrequency_ <<
@@ -58,7 +59,9 @@ void BolidRecorder::update()
 {
 	float *row = buffer_->at(buffer_->mark() - 1);
 	
-	float n = noise(row + lowNoiseBin_, noiseWidth_);
+	memcpy(&(noiseBuffer_[0]), row + lowNoiseBin_, sizeof(float) * noiseWidth_);
+	float n = noise(&(noiseBuffer_[0]), noiseWidth_);
+	//float n = noise(row + lowNoiseBin_, noiseWidth_);
 	int   p = peak(row + lowDetectBin_, detectWidth_);
 	float a = average(
 		row + lowDetectBin_ + (p - (int)(backend_->frequencyToBin(20) - backend_->frequencyToBin(0))),
