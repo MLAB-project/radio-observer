@@ -16,11 +16,12 @@ Compilation
 -----------
 
 1. Install the following libraries:
-      - libfftw3 (http://www.fftw.org/download.html
-      - cfitsio (http://heasarc.gsfc.nasa.gov/fitsio/
+      - libfftw3 (http://www.fftw.org/download.html)
+      - cfitsio (http://heasarc.gsfc.nasa.gov/fitsio/)
       - JACK (http://jackaudio.org/download)
-
-`sudo apt-get install libfftw3-dev cfitsio-dev clang`
+   
+   On a debian system, they can by installed using:
+   `sudo apt-get install libfftw3-dev cfitsio-dev clang`
 
 2. Clone the repository using (for instance):
    `git clone https://github.com/MLAB-project/radio-observer.git`.
