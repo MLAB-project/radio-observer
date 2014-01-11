@@ -78,13 +78,7 @@ struct DataInfo {
 
 
 /**
-<<<<<<< HEAD
- * \brief Represents a backend of the application.
-=======
  * \brief Base class for backend that take I/Q data and process them.
->>>>>>> 48be90fa127072da42b97896f09fc14868a01cf0
- *
- * \todo Write documentation for class Backend.
  */
 class Backend : public DIObject {
 private:
