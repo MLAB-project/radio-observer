@@ -131,9 +131,6 @@ Ref<Frontend> App::createFrontend()
 //}
 
 
-/**
- *
- */
 void App::setUp()
 {
 	AppBase::setUp();
@@ -144,7 +141,10 @@ void App::setUp()
 
 
 /**
- *
+ * \todo Currently, this method exits prematurely if the config
+ *       object is \c NULL (which happens when there is a syntax
+ *       error in the config file or the file is missing). Better
+ *       handling of default config must be implemented.
  */
 int App::onRun()
 {
@@ -161,6 +161,10 @@ int App::onRun()
 	// if (!(bool)options().get('o')) {
 	// 	setOutput(new FileOutput(input_->getFileNameWithExt("png")));
 	// }
+	
+	// TODO: Implement better handling of missing config file.
+	if (config_.isNull())
+		return 1;
 	
 	string cfgName = config_->getStrString("configuration", "default");
 	Injector::getInstance().makePlans(config_->getStrItem("configurations"));
