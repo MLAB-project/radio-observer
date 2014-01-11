@@ -14,6 +14,8 @@
 #include <jack/jack.h>
 
 /**
+ * \brief Frontend class that reads sound data from JACK server.
+ *
  * \todo Write documentation for class JackFrontend.
  */
 class JackFrontend : public Frontend {

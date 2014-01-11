@@ -14,9 +14,12 @@
 
 
 /**
- * \todo Write documentation for class BolidRecorder.
+ * \brief Bolid detector and recorder.
  *
- * Recommended FFT bin settings for this recorder is: 32728 bins, 31704 bin (fft window) overlap.
+ * This class analyzes FFT data passed to it from \ref WaterfallBackend,
+ * attempts to detect bolids and when it does, records them to a FITS file.
+ *
+ * \note Recommended FFT bin settings for this recorder is: 32728 bins, 31704 bin (fft window) overlap.
  */
 class BolidRecorder : public SnapshotRecorder {
 private:

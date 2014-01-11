@@ -16,7 +16,7 @@ using namespace cppapp;
 #include "Backend.h"
 
 /**
- * \todo Write documentation for class Frontend.
+ * \brief Base class for frontends that act as streams of I/Q data.
  */
 class Frontend : public Object {
 private:

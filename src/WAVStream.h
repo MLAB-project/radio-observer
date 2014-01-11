@@ -46,7 +46,7 @@ struct WAVFormat {
 
 
 /**
- * \todo Write documentation for class WAVStream.
+ * \brief Frontend class that reads I/Q data from a WAV stream (file).
  */
 class WAVStream : public Frontend {
 private:

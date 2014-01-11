@@ -23,7 +23,6 @@ using namespace cppapp;
 typedef double SampleType;
 
 
-//typedef double Complex[2];
 struct Complex {
 	double real;
 	double imag;
@@ -74,6 +73,8 @@ struct DataInfo {
 
 
 /**
+ * \brief Base class for backend that take I/Q data and process them.
+ *
  * \todo Write documentation for class Backend.
  */
 class Backend : public DIObject {
