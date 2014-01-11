@@ -38,7 +38,7 @@ public:
 
 
 /**
- * \todo Write documentation for class FFTBackend.
+ * \brief Base class for backends that compute and process FFT from I/Q signal.
  */
 class FFTBackend : public Backend {
 private:

@@ -185,13 +185,13 @@ class WaterfallBackend;
 
 
 /**
- * \brief Base class for all \ref WaterfallBackend recorders.
+ * \brief Base class for FFT data recorders.
  */
 class Recorder : public DIObject {
 protected:
-	Ref<WaterfallBackend>  backend_;
-	RingBuffer2D<float>   *buffer_;
-	Mutex                 *bufferMutex_;
+	Ref<WaterfallBackend>  backend_; ///< This recorder's backend.
+	RingBuffer2D<float>   *buffer_; ///< FFT data buffer to record from.
+	Mutex                 *bufferMutex_; ///< Controls access to \ref buffer_.
 	
 public:
 	Recorder(Ref<WaterfallBackend>  backend):
@@ -226,26 +226,37 @@ public:
 
 
 /**
- * \brief Recorder for the \ref WaterfallBackend that creates continuous snapshots.
+ * \brief FFT data recorder which makes continuous snapshots of constants length.
  */
 class SnapshotRecorder : public Recorder {
 protected:
+	/**
+	 * \brief Specifies a snapshot within \ref Recorder::buffer_ buffer.
+	 */
 	struct Snapshot {
-		int start;
-		int length;
+		int start; ///< Start position of the snapshot in \ref Recorder::buffer_ buffer.
+		int length; ///< Length of the snapshot in number of FFT rows.
 		
-		int reservation;
+		int reservation; ///< Handle of the buffer reservation. See \ref RingBuffer2D for more information.
 		
 		Snapshot() :
 			start(0), length(0),
 			reservation(-1)
 		{}
-
+		
 		Snapshot(int start) :
 			start(start), length(0),
 			reservation(-1)
 		{}
-
+		
+		/**
+		 * \brief Returns the end of the reservation.
+		 *
+		 * The end is computed as \c start + \c length.
+		 *
+		 * \returns the position in \ref WaterfallBackend buffer after the last
+		 *          row of this snapshot
+		 */
 		inline int end() const { return start + length; }
 	};
 	
@@ -305,7 +316,6 @@ public:
  * \brief Represents a backend that calculates FFT from the input and records
  *        the result through multiple recorders.
  *
- * \todo Write documentation for class WaterfallBackend.
  */
 class WaterfallBackend : public FFTBackend {
 private:
