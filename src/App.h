@@ -24,6 +24,8 @@ using namespace cppapp;
 
 
 /**
+ * \brief Represents the application and its entry point.
+ *
  * \todo Write documentation for class App.
  */
 class App : public AppBase {

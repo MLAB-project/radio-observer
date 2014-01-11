@@ -61,7 +61,6 @@ void BolidRecorder::update()
 	
 	memcpy(&(noiseBuffer_[0]), row + lowNoiseBin_, sizeof(float) * noiseWidth_);
 	float n = noise(&(noiseBuffer_[0]), noiseWidth_);
-	//float n = noise(row + lowNoiseBin_, noiseWidth_);
 	int   p = peak(row + lowDetectBin_, detectWidth_);
 	float a = average(
 		row + lowDetectBin_ + (p - (int)(backend_->frequencyToBin(20) - backend_->frequencyToBin(0))),
@@ -69,20 +68,12 @@ void BolidRecorder::update()
 	);
 	
 	float peak_f = backend_->binToFrequency(lowDetectBin_ + p);
-	//if (a > (n * 6.3)) {
-	//	std::cerr << "\rDETECTED  " << peak_f << " Hz         ";
-	//} else {
-	//	std::cerr << "\r          " << peak_f << " Hz         ";
-	//}
-	//bool detect = (a > (n + 8.0));
-	//bool detect = (a > (n * 6.3));
 	bool detect = (a > (n * 2.0));
 	if (detect) {
 		LOG_DEBUG("n = " << std::fixed << std::setprecision(5) << n <<
 				",  p = " << std::setw(5) << p <<
 				",  a = " << a <<
 				",  \033[1;31mdetect = " << detect << "\033[0m");
-		//*output_ << "\033[1;31m" << getFailureCount() << " failure(s)\033[0m, ";
 	} else {
 		LOG_DEBUG("n = " << std::fixed << std::setprecision(5) << n <<
 				",  p = " << std::setw(5) << p <<
@@ -90,7 +81,6 @@ void BolidRecorder::update()
 				",  detect = " << detect);
 	}
 	
-	//if (a > (n * 6.3)) {
 	if (detect) {
 		duration_ += 1;
 		
@@ -166,6 +156,16 @@ float BolidRecorder::average(float *buffer, int length)
 }
 
 
+/**
+ * The config values this method expects in \c parent are:
+ * \li \c snapshot_length
+ * \li \c low_freq
+ * \li \c hi_freq
+ * \li \c low_detect_freq
+ * \li \c hi_detect_freq
+ * \li \c low_noise_freq
+ * \li \c hi_noise_freq
+ */
 Ref<DIObject> BolidRecorder::make(Ref<DynObject> config, Ref<DIObject> parent)
 {
 	int   snapshotLength = config->getStrInt("snapshot_length",    60);

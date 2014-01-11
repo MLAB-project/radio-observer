@@ -16,6 +16,32 @@ using namespace std;
 #include <cppapp/cppapp.h>
 
 
+#ifdef NDEBUG
+#	define safeAdd(a, b) ((a) + (b))
+#	define safeMul(a, b) ((a) * (b))
+#else
+template<class T>
+T safeAdd(T a, T b)
+{
+	T c = a + b;
+	
+	if (b > 0 ? c < a : c > a) {
+		LOG_ERROR("Addition overflow: " << a << " + " << b << " = " << c);
+	}
+	
+	return c;
+}
+
+template<class T>
+T safeMul(T a, T b)
+{
+	T c = a * b;
+	
+	return c;
+}
+#endif
+
+
 template<class T>
 pair<T, T> orderPair(T a, T b)
 {

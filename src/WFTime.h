@@ -11,14 +11,16 @@
 
 #include <ostream>
 #include <ctime>
-
+#include <sys/time.h>
 using namespace std;
 
-#include <sys/time.h>
+#include "utils.h"
+
 
 #define MS_IN_SECOND 1000
-#define US_IN_MS 1000
+#define US_IN_MS     1000
 #define US_IN_SECOND (MS_IN_SECOND * US_IN_MS)
+
 
 /**
  * \todo Write documentation for class WFTime.
@@ -55,18 +57,21 @@ public:
 		time.tv_usec = (miliseconds % MS_IN_SECOND) * US_IN_MS;
 	}
 	
-	inline WFTime addMicroseconds(time_t us)
+	inline WFTime addMicroseconds(long us)
 	{
-		WFTime result(time.tv_sec, time.tv_usec + us);
-		result.time.tv_sec += result.time.tv_usec / US_IN_SECOND;
-		result.time.tv_usec %= US_IN_SECOND;
-		return result;
+		long sec  = time.tv_sec;
+		long usec = safeAdd(((long)time.tv_usec), us);
+		
+		sec  = safeAdd(sec, (long)usec / (long)US_IN_SECOND);
+		usec %= (long)US_IN_SECOND;
+		
+		return WFTime(sec, usec);
 	}
 	
 	inline WFTime addSamples(int sampleCount, int sampleRate)
 	{
-		long microseconds = (((float)sampleCount / (float)sampleRate) *
-						 (float)US_IN_SECOND);
+		long microseconds = (((double)sampleCount / (double)sampleRate) *
+						 (double)US_IN_SECOND);
 		return addMicroseconds(microseconds);
 		//return WFTime(
 		//	microseconds / US_IN_SECOND,
@@ -123,15 +128,18 @@ inline bool operator>(const WFTime& lhs, const WFTime& rhs)
 	return timercmp(&(lhs.time), &(rhs.time), >);
 }
 
+
 inline bool operator<(const WFTime& lhs, const WFTime& rhs)
 {
 	return timercmp(&(lhs.time), &(rhs.time), <);
 }
 
+
 inline bool operator!=(const WFTime& lhs, const WFTime& rhs)
 {
 	return timercmp(&(lhs.time), &(rhs.time), !=);
 }
+
 
 inline WFTime operator*(const WFTime& lhs, float rhs)
 {

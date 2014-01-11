@@ -138,6 +138,28 @@ public:
 		
 		//return (frequency * n) / sr;
 	}
+	
+	/**
+	 * \brief Converts number of FFT samples to seconds.
+	 *
+	 * \param samples number of FFT samples
+	 * \returns time in seconds
+	 */
+	double fftSamplesToTime(int samples)
+	{
+		return (double)samples / (double)fftSampleRate_;
+	}
+	
+	/**
+	 * \brief Converts time in seconds to number of FFT samples.
+	 *
+	 * \param time time in seconds
+	 * \returns number of FFT samples
+	 */
+	int timeToFFTSamples(double time)
+	{
+		return time * fftSampleRate_;
+	}
 };
 
 

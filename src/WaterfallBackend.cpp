@@ -346,7 +346,7 @@ void SnapshotRecorder::start()
 
 void SnapshotRecorder::stop()
 {
-	if (buffer_->size(nextSnapshot_.start) >= 0)
+	if ((buffer_->size(nextSnapshot_.start) >= 0) && writeUnfinished_)
 		startWriting();
 	
 	snapshots_.close();
@@ -372,6 +372,12 @@ void SnapshotRecorder::update()
 }
 
 
+/**
+ * The config values this method expects in \c parent are:
+ * \li \c snapshot_length
+ * \li \c low_freq
+ * \li \c hi_freq
+ */
 Ref<DIObject> SnapshotRecorder::make(Ref<DynObject> config, Ref<DIObject> parent)
 {
 	int   snapshotLength = config->getStrInt("snapshot_length", 60);

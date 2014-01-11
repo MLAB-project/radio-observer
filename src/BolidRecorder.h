@@ -14,6 +14,8 @@
 
 
 /**
+ * \brief Recorder for \ref WaterfallBackend class that detects and records bolids.
+ *
  * \todo Write documentation for class BolidRecorder.
  *
  * Recommended FFT bin settings for this recorder is: 32728 bins, 31704 bin (fft window) overlap.
@@ -70,6 +72,8 @@ public:
 		bolidRecord_(false),
 		duration_(0)
 	{
+		writeUnfinished_ = false;
+		
 		ORDER_PAIR(minDetectFq_, maxDetectFq_);
 		int minFqBin = backend_->frequencyToBin(minDetectFq_);
 		int maxFqBin = backend_->frequencyToBin(maxDetectFq_);
@@ -104,6 +108,9 @@ public:
 	 */
 	static float average(float *buffer, int length);
 	
+	/**
+	 * \brief Factory method for \ref BolidRecorder.
+	 */
 	static Ref<DIObject> make(Ref<DynObject> config, Ref<DIObject> parent);
 };
 

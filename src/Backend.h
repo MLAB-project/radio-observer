@@ -21,9 +21,13 @@ using namespace cppapp;
 
 
 typedef double SampleType;
+typedef long   SampleCount;
+typedef int    SampleRate;
 
 
-//typedef double Complex[2];
+/**
+ * \brief Complex number.
+ */
 struct Complex {
 	double real;
 	double imag;
@@ -74,6 +78,8 @@ struct DataInfo {
 
 
 /**
+ * \brief Represents a backend of the application.
+ *
  * \todo Write documentation for class Backend.
  */
 class Backend : public DIObject {

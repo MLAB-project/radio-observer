@@ -14,6 +14,8 @@
 #include <jack/jack.h>
 
 /**
+ * \brief Represents a frontend that connects and reads from a \c jackd server.
+ *
  * \todo Write documentation for class JackFrontend.
  */
 class JackFrontend : public Frontend {

@@ -184,6 +184,9 @@ public:
 class WaterfallBackend;
 
 
+/**
+ * \brief Base class for all \ref WaterfallBackend recorders.
+ */
 class Recorder : public DIObject {
 protected:
 	Ref<WaterfallBackend>  backend_;
@@ -222,6 +225,9 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 
+/**
+ * \brief Recorder for the \ref WaterfallBackend that creates continuous snapshots.
+ */
 class SnapshotRecorder : public Recorder {
 protected:
 	struct Snapshot {
@@ -246,6 +252,7 @@ protected:
 	int   snapshotLength_;
 	float leftFrequency_;
 	float rightFrequency_;
+	bool  writeUnfinished_;
 	
 	int      snapshotRows_;
 	int      leftBin_;
@@ -268,7 +275,8 @@ public:
 		Recorder(backend),
 		snapshotLength_(snapshotLength),
 		leftFrequency_(leftFrequency),
-		rightFrequency_(rightFrequency)
+		rightFrequency_(rightFrequency),
+		writeUnfinished_(true)
 	{
 		ORDER_PAIR(leftFrequency_, rightFrequency_);
 	}
@@ -294,6 +302,9 @@ public:
 
 
 /**
+ * \brief Represents a backend that calculates FFT from the input and records
+ *        the result through multiple recorders.
+ *
  * \todo Write documentation for class WaterfallBackend.
  */
 class WaterfallBackend : public FFTBackend {
