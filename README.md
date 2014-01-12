@@ -14,9 +14,13 @@ Compilation
 -----------
 
 1. Install the following libraries:
-      - libfftw3 (http://www.fftw.org/download.html, `sudo apt-get install libfftw3-dev` on Ubuntu)
-      - cfitsio (http://heasarc.gsfc.nasa.gov/fitsio/, `sudo apt-get install cfitsio-dev` on Ubuntu)
+      - libfftw3 (http://www.fftw.org/download.html)
+      - cfitsio (http://heasarc.gsfc.nasa.gov/fitsio/)
       - JACK (http://jackaudio.org/download)
+
+on Ubuntu run:
+
+`sudo apt-get install libfftw3-dev cfitsio-dev libjack-jackd2-dev`
 
 2. Clone the repository using (for instance):
    `git clone https://github.com/MLAB-project/radio-observer.git`.
@@ -63,6 +67,8 @@ Despite there being a `log_file` configuration option, the log is currently
 written only to the stderr.  To append it to a file, do output redirection (`$
 waterfall 2> your_log_file.log`).
 
+Fits file handling: FITS can be converted in png by fits2png script. 
+`sudo apt-get install python-pyfits`
 
 ChangeLog
 ---------
