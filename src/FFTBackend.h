@@ -40,6 +40,15 @@ public:
 };
 
 
+struct RawDataHandle {
+	int    mark; ///< points to a row \ref FFTBackend::rawBuffer_;
+	WFTime time; ///< contains the 
+	
+	RawDataHandle() : mark(0) {}
+	RawDataHandle(int mark, WFTime time) : mark(mark), time(time) {}
+};
+
+
 /**
  * \brief Base class for backends that compute and process FFT from I/Q signal.
  */
@@ -51,40 +60,33 @@ private:
 	
 	//int bins_;
 	int binOverlap_;
-	int bufferSize_; //< buffer size in bytes
+	int bufferSize_; ///< buffer size in bytes
 	
 	IQGainPhaseCorrection correction_;
 	
-	float        *windowFn_;  //< table containing the values of the window function
+	float        *windowFn_;  ///< table containing the values of the window function
 	
-	fftw_complex *window_;    //< buffer to store incoming I/Q samples
-	fftw_complex *inMark_;    //< points to the current position in the FFTBackend::window_ buffer
-	fftw_complex *inEnd_;     //< points to the item after the last in the FFTBackend::window_ buffer
+	fftw_complex *window_;    ///< buffer to store incoming I/Q samples
+	fftw_complex *inMark_;    ///< points to the current position in the FFTBackend::window_ buffer
+	fftw_complex *inEnd_;     ///< points to the item after the last in the FFTBackend::window_ buffer
 	
-	WFTime       *windowTimes_;
-	int          *windowRawMarks_;
+	RawDataHandle *windowRaw_; ///< buffer containing pointers to raw data
 	
-	fftw_complex *in_, *out_; //< input and output FFT buffers
-	fftw_plan     fftPlan_;
+	fftw_complex *in_, *out_; ///< input and output FFT buffers
+	fftw_plan     fftPlan_;   ///< FFT plan
 	
-	DataInfo      info_;
+	DataInfo      info_; ///< FFT data stream info (as opposed to the raw data stream)
 	
-	inline void floatToInt(Complex c, int16_t *result) const
-	{
-		result[0] = (int16_t)(c.real * 0x7fff);
-		result[1] = (int16_t)(c.imag * 0x7fff);
-	}
-
 protected:
-	int   bins_; //< Number of FFT output bins.
+	int   bins_; ///< Number of FFT output bins.
 	/// Number of FFT results per second (Hz).
 	float fftSampleRate_;
 	
-	RingBuffer2D<int16_t> rawBuffer_;
+	RingBuffer2D<int16_t> rawBuffer_; ///< contains raw sound data
 	
 	virtual int getRawBufferSize() { return 1024; }
 	
-	virtual void processFFT(const fftw_complex *data, int size, DataInfo info) {}
+	virtual void processFFT(const fftw_complex *data, int size, DataInfo info, int rawMark) {}
 	
 public:
 	FFTBackend(int bins, int overlap);
@@ -175,6 +177,19 @@ public:
 	int timeToFFTSamples(double time)
 	{
 		return time * fftSampleRate_;
+	}
+	
+	inline static int16_t floatToInt(float f)
+	{
+		if (f > 1.0) f = 1.0;
+		if (f < -1.0) f = -1.0;
+		return (int16_t)(f * 0x7fff);
+	}
+	
+	inline static void floatToInt(Complex c, int16_t *result)
+	{
+		result[0] = (int16_t)(c.real * 0x7fff);
+		result[1] = (int16_t)(c.imag * 0x7fff);
 	}
 };
 

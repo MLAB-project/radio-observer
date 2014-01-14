@@ -156,6 +156,7 @@ void BolidRecorder::update()
 				LOG_WARNING("************** METEOR DETECTED **************");
 				LOG_INFO("Duration: " << duration << "s" <<
 					    "  |  Frequency: " << peakFreq_ << "Hz");
+				nextSnapshot_.includeRawData = true;
 				startWriting();
 				state_ = STATE_INIT;
 			}

@@ -20,76 +20,106 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void* WaterfallRecorder::workerThreadMethod()
-{
-	MutexLock lock(&mutex_);
-	
-	while (!exitWorkerThread_) {
-		condition_.wait(mutex_);
-		if (exitWorkerThread_) break;
-		// TODO: Process data, make create new files as necessary.
-	}
-	
-	return NULL;
-}
-
-
-void WaterfallRecorder::resize(int bins, long maxBufferSize)
-{
-	int rows = inputBuffer_.autoResize(bins, maxBufferSize);
-	outputBuffer_.resize(rows, bins);
-	
-	currentRow_ = 0;
-}
-
-
-void WaterfallRecorder::start()
-{
-	workerThread_ = new Thread(this, &WaterfallRecorder::workerThreadMethod);
-}
-
-
-void WaterfallRecorder::stop()
-{
-	// Lock the mutex, necessary for the condition variable.
-	MutexLock lock(&mutex_);
-	
-	// Signal the worker thread to exit the work loop.
-	exitWorkerThread_ = true;
-	condition_.signal();
-	
-	// Wait for the worker thread to stop and release the
-	// resources.
-	workerThread_->join();
-	delete workerThread_;
-	workerThread_ = NULL;
-}
-
-
-float* WaterfallRecorder::addRow(WFTime time)
-{
-	// If the input buffer is full, swap buffers
-	// and send signal to worker thread that the 
-	// output buffer is ready to be written to
-	// file.
-	if (inputBuffer_.isFull()) {
-		MutexLock lock(&mutex_);
-		
-		inputBuffer_.swap(outputBuffer_);
-		condition_.signal();
-		
-		inputBuffer_.rewind();
-	}
-	
-	// Add row to the input buffer and return
-	// pointer to it.
-	return inputBuffer_.addRow(time);
-}
+//void* WaterfallRecorder::workerThreadMethod()
+//{
+//	MutexLock lock(&mutex_);
+//	
+//	while (!exitWorkerThread_) {
+//		condition_.wait(mutex_);
+//		if (exitWorkerThread_) break;
+//		// TODO: Process data, make create new files as necessary.
+//	}
+//	
+//	return NULL;
+//}
+//
+//
+//void WaterfallRecorder::resize(int bins, long maxBufferSize)
+//{
+//	int rows = inputBuffer_.autoResize(bins, maxBufferSize);
+//	outputBuffer_.resize(rows, bins);
+//	
+//	currentRow_ = 0;
+//}
+//
+//
+//void WaterfallRecorder::start()
+//{
+//	workerThread_ = new Thread(this, &WaterfallRecorder::workerThreadMethod);
+//}
+//
+//
+//void WaterfallRecorder::stop()
+//{
+//	// Lock the mutex, necessary for the condition variable.
+//	MutexLock lock(&mutex_);
+//	
+//	// Signal the worker thread to exit the work loop.
+//	exitWorkerThread_ = true;
+//	condition_.signal();
+//	
+//	// Wait for the worker thread to stop and release the
+//	// resources.
+//	workerThread_->join();
+//	delete workerThread_;
+//	workerThread_ = NULL;
+//}
+//
+//
+//float* WaterfallRecorder::addRow(WFTime time)
+//{
+//	// If the input buffer is full, swap buffers
+//	// and send signal to worker thread that the 
+//	// output buffer is ready to be written to
+//	// file.
+//	if (inputBuffer_.isFull()) {
+//		MutexLock lock(&mutex_);
+//		
+//		inputBuffer_.swap(outputBuffer_);
+//		condition_.signal();
+//		
+//		inputBuffer_.rewind();
+//	}
+//	
+//	// Add row to the input buffer and return
+//	// pointer to it.
+//	return inputBuffer_.addRow(time);
+//}
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // RECORDER
 ////////////////////////////////////////////////////////////////////////////////
+
+
+int Recorder::getSampleRate()
+{
+	return backend_->getStreamInfo().sampleRate;
+}
+
+
+int Recorder::getFFTSampleRate()
+{
+	return backend_->getFFTSampleRate();
+}
+
+
+int Recorder::fftMarkToRaw(int mark)
+{
+	return rawHandles_->at(mark).mark;
+}
+
+
+WFTime Recorder::fftMarkToTime(int mark)
+{
+	return rawHandles_->at(mark).time;
+}
+
+
+int Recorder::fftSamplesToRaw(int sampleCount)
+{
+	return ((double)sampleCount / (double)getFFTSampleRate()) * (double)getSampleRate();
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,7 +137,9 @@ void* SnapshotRecorder::threadMethod()
 		
 		FOR_EACH(received, snapshot) {
 			write(*snapshot);
-
+			if (snapshot->includeRawData)
+				writeRaw(*snapshot);
+			
 			{
 				MutexLock bufferLock(bufferMutex_);
 				buffer_->freeReservation(snapshot->reservation);
@@ -159,35 +191,18 @@ void SnapshotRecorder::write(Snapshot snapshot)
 	float fftSampleRate = backend_->getFFTSampleRate();
 	
 	string fileName = getFileName(time);
-	//char *fileName = new char[1024];
-	//sprintf(fileName, "!snapshot_%s_%s.fits",
-	//	   origin.c_str(),
-	//	   time.format("%Y_%m_%d_%H_%M_%S").c_str());
-	
-	//int status = 0;
-	//fitsfile *fptr;
-	FITSWriter w;
 	
 	LOG_INFO("Writing snapshot \"" << (fileName.c_str() + 1) << "\"...");
 	
+	FITSWriter w;
+	
+	fileName = fileName + "[compress]";
 	if (!w.open(fileName.c_str()))
 		return;
-	//fits_create_file(&fptr, fileName, &status);
-	//if (status) {
-	//	LOG_ERROR("Failed to create FITS file (code: " << status << ").");
-	//	//cerr << "ERROR: Failed to create FITS file (code: " << status << ")." << endl;
-	//	return;
-	//}
 	
 	int width = rightBin_ - leftBin_;
 	w.createImage(width, length, FLOAT_IMG);
-	//long dimensions[2] = { width, snapshotLength_ };
-	//fits_create_img(fptr, FLOAT_IMG, 2, dimensions, &status);
-	//if (status) {
-	//	LOG_ERROR("Failed to create primary HDU in FITS file (code: " << status << ").");
-	//	//cerr << "ERROR: Failed to create primary HDU in FITS file (code: " <<
-	//	//	status << ")." << endl;
-	//}
+	//w.createImage(width, length, SHORT_IMG);
 	
 	w.comment("File created by " PACKAGE_STRING ".");
 	w.comment("See " PACKAGE_URL ".");
@@ -195,75 +210,90 @@ void SnapshotRecorder::write(Snapshot snapshot)
 	w.date();
 	w.comment(WFTime::now().format("Local time: %Y-%m-%d %H:%M:%S %Z", true).c_str());
 	w.writeHeader("DATE-OBS", time.format("%Y-%m-%dT%H:%M:%S").c_str(), "observation date (UTC)");
-	//fits_write_comment(fptr, "File created by " PACKAGE_STRING ".", &status);
-	//fits_write_comment(fptr, "See " PACKAGE_URL ".", &status);
-	//writeHeader(fptr, "ORIGIN", origin.c_str(), "", &status);
-	//fits_write_date(fptr, &status);
-	//fits_write_comment(fptr, WFTime::now().format("Local time: %Y-%m-%d %H:%M:%S %Z", true).c_str(), &status);
-	//writeHeader(fptr, "DATE-OBS", time.format("%Y-%m-%dT%H:%M:%S").c_str(), "observation date (UTC)", &status);
 	
 	w.writeHeader("CTYPE2", "TIME",                      "in seconds");
 	w.writeHeader("CRPIX2", 1,                           ""          );
 	w.writeHeader("CRVAL2", (float)time.seconds(),       ""          );
 	w.writeHeader("CDELT2", 1.f / (float)fftSampleRate,  ""          );
-	//writeHeader(fptr, "CTYPE2", "TIME",                      "in seconds", &status);
-	//writeHeader(fptr, "CRPIX2", 1,                           "",           &status);
-	//writeHeader(fptr, "CRVAL2", (float)time.seconds(),       "",           &status);
-	//writeHeader(fptr, "CDELT2", 1.f / (float)fftSampleRate,  "",           &status);
 	
 	w.writeHeader("CTYPE1", "FREQ",                             "in Hz");
 	w.writeHeader("CRPIX1", 1.f,                                ""     );
 	w.writeHeader("CRVAL1", (float)leftFrequency_,              ""     );
 	w.writeHeader("CDELT1", (float)backend_->binToFrequency(),  ""     );
-	//writeHeader(fptr, "CTYPE1", "FREQ",                            "in Hz", &status);
-	//writeHeader(fptr, "CRPIX1", 1.f,                               "",      &status);
-	//writeHeader(fptr, "CRVAL1", (float)leftFrequency_,             "",      &status);
-	//writeHeader(fptr, "CDELT1", (float)backend_->binToFrequency(), "",      &status);
 	
 	w.checkStatus("Error occured while writing FITS file header.");
-	//if (status) {
-	//	LOG_ERROR("Error occured while writing FITS file header (code: " << status << ").");
-	//	//cerr << "ERROR: Error occured while writing FITS file header (code: " <<
-	//	//	status << ")." << endl;
-	//}
+	
+	//int16_t *row = new int16_t[width];
 	
 	int rowIndex = start;
 	for (int y = 0; y < length; y++, rowIndex++) {
+		//float *srcRow = buffer_->at(rowIndex);
+		//for (int x = 0; x < width; x++) {
+		//	row[x] = FFTBackend::floatToInt(*(srcRow + leftBin_ + x) / (double)backend_->getBins());
+		//}
+		//w.write(y, 1, row);
 		w.write(y, 1, (float*)(buffer_->at(rowIndex) + leftBin_));
 	}
-	//long fpixel[2] = { 1, 1 };
-	//for (int y = 0; y < outBuffer_.mark; y++) {
-	//	fits_write_pix(fptr,
-	//				TFLOAT,
-	//				fpixel,
-	//				width,
-	//				(void*)(outBuffer_.getRow(y) + leftBin_),
-	//				&status);
-	//	fpixel[1]++;
-	//	if (status) break;
-	//}
+	
+	//delete [] row;
 	
 	w.checkStatus("Error occured while writing data to a FITS file.");
-	//if (status) {
-	//	LOG_ERROR("Error occured while writing data to a FITS file (file name: " << (fileName + 1) <<
-	//			", code: " << status << ").");
-	//	
-	//	//cerr << "ERROR: Error occured while writing data to FITS file (code: " <<
-	//	//	status << ")." << endl;
-	//}
-	
 	w.close();
-	//fits_close_file(fptr, &status);
-	//if (status) {
-	//	LOG_ERROR("Failed to close FITS file (file name: " << (fileName + 1) <<
-	//			", code: " << status << ").");
-	//	
-	//	//cerr << "ERROR: Failed to close FITS file (code: " << status << ")." << endl;
-	//}
-	
-	//delete [] fileName;
 	
 	LOG_DEBUG("Finished writing snapshot.");
+}
+
+
+void SnapshotRecorder::writeRaw(Snapshot snapshot)
+{
+	int start  = fftMarkToRaw(snapshot.start);
+	int length = fftSamplesToRaw(snapshot.length);
+	
+	WFTime time   = fftMarkToTime(snapshot.start);
+	string origin = backend_->getOrigin();
+	
+	float fftSampleRate = backend_->getFFTSampleRate();
+	
+	string fileName = getFileName("raws", "fits", time);
+	
+	LOG_INFO("Writing raw snapshot \"" << (fileName.c_str() + 1) << "\"...");
+	
+	FITSWriter w;
+	
+	//fileName = fileName + "[compress R 2,200]";
+	if (!w.open(fileName.c_str()))
+		return;
+	
+	w.createImage(2, length, SHORT_IMG);
+	
+	w.comment("File created by " PACKAGE_STRING ".");
+	w.comment("See " PACKAGE_URL ".");
+	w.writeHeader("ORIGIN", origin.c_str(), "");
+	w.date();
+	w.comment(WFTime::now().format("Local time: %Y-%m-%d %H:%M:%S %Z", true).c_str());
+	w.writeHeader("DATE-OBS", time.format("%Y-%m-%dT%H:%M:%S").c_str(), "observation date (UTC)");
+	
+	w.writeHeader("CTYPE2", "TIME",                      "in seconds");
+	w.writeHeader("CRPIX2", 1,                           ""          );
+	w.writeHeader("CRVAL2", (float)time.seconds(),       ""          );
+	w.writeHeader("CDELT2", 1.f / (float)fftSampleRate,  ""          );
+	
+	w.writeHeader("CTYPE1", "FREQ",                             "in Hz");
+	w.writeHeader("CRPIX1", 1.f,                                ""     );
+	w.writeHeader("CRVAL1", (float)leftFrequency_,              ""     );
+	w.writeHeader("CDELT1", (float)backend_->binToFrequency(),  ""     );
+	
+	w.checkStatus("Error occured while writing FITS file header.");
+	
+	int rowIndex = start;
+	for (int y = 0; y < length; y++, rowIndex++) {
+		w.write(y, 1, buffer_->at(rowIndex));
+	}
+	
+	w.checkStatus("Error occured while writing data to a FITS file.");
+	w.close();
+	
+	LOG_DEBUG("Finished writing raw snapshot.");
 }
 
 
@@ -275,12 +305,19 @@ string SnapshotRecorder::getFileName(WFTime time)
 }
 
 
+string SnapshotRecorder::getFileName(const char *typ, const char *ext, WFTime time)
+{
+	string origin = backend_->getOrigin();
+	return getFileBasename(typ, ext, origin, time);
+}
+
+
 string SnapshotRecorder::getFileName(const string &typ,
 							  const string &origin,
 							  WFTime       time)
 {
 	char fileName[1024];
-	sprintf(fileName, "!%s_%s_%s%3d.fits",
+	sprintf(fileName, "!%s_%s_%s%03d.fits",
 		   typ.c_str(),
 		   origin.c_str(),
 		   time.format("%Y%m%d%H%M%S").c_str(),
@@ -295,7 +332,7 @@ string SnapshotRecorder::getFileBasename(const char   *typ,
                                          WFTime        time)
 {
 	char fileName[1024];
-	sprintf(fileName, "!%s_%s_%s%3d.%s",
+	sprintf(fileName, "!%s_%s_%s%03d.%s",
 		   typ,
 		   origin.c_str(),
 		   time.format("%Y%m%d%H%M%S").c_str(),
@@ -421,7 +458,7 @@ CPPAPP_DI_METHOD("snapshot", SnapshotRecorder, make);
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void WaterfallBackend::processFFT(const fftw_complex *data, int size, DataInfo info)
+void WaterfallBackend::processFFT(const fftw_complex *data, int size, DataInfo info, int rawMark)
 {
 	//float *row = inBuffer_.addRow(info.timeOffset);
 	float *row = buffer_.push();
@@ -442,6 +479,8 @@ void WaterfallBackend::processFFT(const fftw_complex *data, int size, DataInfo i
 			data[i][1] * data[i][1]
 		);
 	}
+
+	rawHandles_[buffer_.mark()] = RawDataHandle(rawMark, info.timeOffset);
 	
 	//LOG_DEBUG("Data stream time: " << info.timeOffset.format("%Y-%m-%d  %H:%M:%S"));
 	
@@ -499,7 +538,7 @@ WaterfallBackend::~WaterfallBackend()
 void WaterfallBackend::addRecorder(Ref<Recorder> recorder)
 {
 	recorders_.push_back(recorder);
-	recorder->setBuffer(&buffer_, &bufferMutex_);
+	recorder->setBuffer(&buffer_, &bufferMutex_, &rawHandles_);
 }
 
 
@@ -519,6 +558,7 @@ void WaterfallBackend::startStream(StreamInfo info)
 	
 	// TODO: Make the chunk size an config option.
 	buffer_.resize(getBins(), WATERFALL_BACKEND_CHUNK_SIZE, bufferSize);
+	rawHandles_.resize(buffer_.getCapacity());
 	
 	FOR_EACH(recorders_, it) {
 		(*it)->start();

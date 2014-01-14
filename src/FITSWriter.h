@@ -134,6 +134,7 @@ public:
 	 */
 	void write(long x, long y, long count, void *data, int type);
 	void write(long y, long count, float *data);
+	void write(long y, long count, int16_t *data);
 	
 	void checkStatus(const char *errorMsg);
 };

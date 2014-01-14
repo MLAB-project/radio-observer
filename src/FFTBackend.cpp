@@ -123,8 +123,7 @@ FFTBackend::FFTBackend(int bins, int overlap) :
 	inMark_ = window_;
 	inEnd_ = window_ + bins_;
 	
-	windowTimes_    = new WFTime[bins_];
-	windowRawMarks_ = new int[bins_];
+	windowRaw_ = new RawDataHandle[bins_];
 }
 
 
@@ -137,11 +136,8 @@ FFTBackend::~FFTBackend()
 	fftw_free(in_);
 	fftw_free(out_);
 	
-	delete windowTimes_;
-	windowTimes_ = NULL;
-	
-	delete windowRawMarks_;
-	windowRawMarks_ = NULL;
+	delete [] windowRaw_;
+	windowRaw_ = NULL;
 }
 
 
@@ -188,6 +184,7 @@ void FFTBackend::startStream(StreamInfo info)
 				(float)(bins_ - 1)
 			)
 		);
+		CPPAPP_ASSERT(windowFn_[i] <= 1.0);
 	}
 	
 	LOG_DEBUG("Starting FFT stream with time offset " << info.timeOffset << ", sample rate " << info.sampleRate << "Hz.");
@@ -219,11 +216,13 @@ void FFTBackend::process(const vector<Complex> &data, DataInfo info)
 		correction_.process(src, count, (Complex*)inMark_);
 		for (int i = 0; i < count; i++) {
 			floatToInt(src[i], rawBuffer_.push());
-			windowTimes_[inMark_ - window_ + i]    = timeOffset.addSamples(i, streamInfo_.sampleRate);
-			windowRawMarks_[inMark_ - window_ + i] = rawBuffer_.mark();
+			windowRaw_[inMark_ - window_ + i] = RawDataHandle(
+				rawBuffer_.mark(),
+				timeOffset.addSamples(i, streamInfo_.sampleRate)
+			);
 		}
 		
-		info_.timeOffset = windowTimes_[0];
+		info_.timeOffset = windowRaw_[0].time;
 		
 		// From the window buffer, copy the data to the FFT input buffer, aplying
 		// the window function
@@ -237,8 +236,7 @@ void FFTBackend::process(const vector<Complex> &data, DataInfo info)
 		
 		// Copy the overlap back to the beginning of the window buffer.
 		memmove(window_, inEnd_ - binOverlap_, binOverlap_ * sizeof(in_[0]));
-		memmove(windowTimes_,    windowTimes_ + bins_ - binOverlap_,    binOverlap_ * sizeof(windowTimes_[0]));
-		memmove(windowRawMarks_, windowRawMarks_ + bins_ - binOverlap_, binOverlap_ * sizeof(windowRawMarks_[0]));
+		memmove(windowRaw_, windowRaw_ + bins_ - binOverlap_, binOverlap_ * sizeof(windowRaw_[0]));
 		
 		// Update variables to keep track of the remaining data/work.
 		inMark_ = window_ + binOverlap_;
@@ -246,7 +244,7 @@ void FFTBackend::process(const vector<Complex> &data, DataInfo info)
 		src += count;
 		
 		// Pass the FFT data to the derived class.
-		processFFT(out_, bins_, info_);
+		processFFT(out_, bins_, info_, windowRaw_[0].mark);
 		
 		timeOffset = timeOffset.addSamples(count, streamInfo_.sampleRate);
 		info_.offset++;
@@ -259,8 +257,10 @@ void FFTBackend::process(const vector<Complex> &data, DataInfo info)
 		correction_.process(src, size, (Complex*)inMark_);
 		for (int i = 0; i < size; i++) {
 			floatToInt(src[i], rawBuffer_.push());
-			windowTimes_[inMark_ - window_ + i]    = timeOffset.addSamples(i, streamInfo_.sampleRate);
-			windowRawMarks_[inMark_ - window_ + i] = rawBuffer_.mark();
+			windowRaw_[inMark_ - window_ + i] = RawDataHandle(
+				rawBuffer_.mark(),
+				timeOffset.addSamples(i, streamInfo_.sampleRate)
+			);
 		}
 		
 		inMark_ += size;

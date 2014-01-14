@@ -140,6 +140,12 @@ void FITSWriter::write(long y, long count, float *data)
 }
 
 
+void FITSWriter::write(long y, long count, int16_t *data)
+{
+	write(0, y, count * dimensions_[0], data, TSHORT);
+}
+
+
 void FITSWriter::checkStatus(const char *errorMsg)
 {
 	CHECK_STATUS(errorMsg);
