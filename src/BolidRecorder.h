@@ -22,6 +22,18 @@
  * \note Recommended FFT bin settings for this recorder is: 32728 bins, 31704 bin (fft window) overlap.
  */
 class BolidRecorder : public SnapshotRecorder {
+public:
+	/**
+	 * \brief Lists states of the bolid detection finite state machine.
+	 */
+	enum State {
+		STATE_INIT,        ///< Default state, no bolid is being detected.
+		STATE_BOLID,       ///< Bolid is being detected.
+		STATE_BOLID_ENDED, ///< Bolid has been detected, waiting for the timeout to run out. 
+		
+		STATE_COUNT        ///< Number of states.
+	};
+
 private:
 	/**
 	 * Copy constructor.
@@ -29,31 +41,68 @@ private:
 	BolidRecorder(const BolidRecorder& other);
 
 protected:
+	/**
+	 * \name Frequency Bounds
+	 */
+	///@{
 	float minNoiseFq_;
 	float maxNoiseFq_;
 	
 	int   lowNoiseBin_;
 	int   noiseWidth_;
-
+	
 	float minDetectFq_;
 	float maxDetectFq_;
-
+	
 	int   lowDetectBin_;
 	int   detectWidth_;
+	///@}
 	
-	bool  bolidDetected_;
-	bool  bolidRecord_;
+	/**
+    	 * \name Detection Algorithm Settings
+	 */
+	///@{
+	double advanceTime_; ///< In seconds.
+	int    advance_; ///< In FFT rows.
+	double jitterTime_; ///< In seconds.
+	int    jitter_; ///< In FFT rows.
+	float  averageFrequencyRange_; ///< In Hz.
+	int    averageBinRange_; ///< In bins.
+	float  thresholdRatio_;
+	
+	string metadataPath_;
+	///@}
+	
+	/**
+	 * \name Detection Algorithm Variables
+	 */
+	///@{
+	State state_;
+	float peakFreq_;
 	int   duration_;
+	float noise_;
+	float magnitude_;
+	
+	//bool  bolidDetected_;
+	//bool  bolidRecord_;
 	
 	vector<float> noiseBuffer_;
+	
+	Ref<Output> metadataFile_;
+	
+	Ref<Output> getMetadataFile(WFTime time);
+	///@}
 	
 	float average(float fromFq, float toFq);
 
 public:
 	/**
-	 * Constructor.
+	 * \brief Constructor.
 	 */
 	BolidRecorder();
+	/**
+	 * \brief Constructor.
+	 */
 	BolidRecorder(Ref<WaterfallBackend>  backend,
 			    int                    snapshotLength,
 			    float                  leftFrequency,
@@ -61,7 +110,12 @@ public:
 			    float                  minDetectionFq,
 			    float                  maxDetectionFq,
 			    float                  minNoiseFq,
-			    float                  maxNoiseFq) :
+			    float                  maxNoiseFq,
+			    double                 advanceTime,
+			    double                 jitterTime,
+			    float                  averageFreqRange,
+			    float                  threshold,
+			    string                 metadataPath) :
 		SnapshotRecorder(backend, snapshotLength, leftFrequency, rightFrequency),
 		minNoiseFq_(minNoiseFq),
 		maxNoiseFq_(maxNoiseFq),
@@ -69,8 +123,13 @@ public:
 		noiseWidth_(0),
 		minDetectFq_(minDetectionFq),
 		maxDetectFq_(maxDetectionFq),
-		bolidDetected_(false),
-		bolidRecord_(false),
+		advanceTime_(advanceTime),
+		jitterTime_(jitterTime),
+		averageFrequencyRange_(averageFreqRange),
+		thresholdRatio_(threshold),
+		metadataPath_(metadataPath),
+		//bolidDetected_(false),
+		//bolidRecord_(false),
 		duration_(0)
 	{
 		writeUnfinished_ = false;
@@ -90,11 +149,12 @@ public:
 	}
 	
 	/**
-	 * Destructor.
+	 * \brief Destructor.
 	 */
 	virtual ~BolidRecorder() {}
 	
 	virtual string getFileName(WFTime time);
+	virtual string getMetadataFileName(WFTime time);
 	
 	virtual void start();
 	virtual void update();
@@ -114,6 +174,7 @@ public:
 	 */
 	static Ref<DIObject> make(Ref<DynObject> config, Ref<DIObject> parent);
 };
+
 
 #endif /* end of include guard: BOLIDRECORDER_MKBLQWES */
 

@@ -138,6 +138,11 @@ void SnapshotRecorder::startWriting()
 }
 
 
+/**
+ * \bug There is a bug in the time mark in the data stream -
+ *      it has been temporarily fixed here by using current time
+ *      instead.
+ */
 void SnapshotRecorder::write(Snapshot snapshot)
 {
 	// WFTime time = outBuffer_.times[0];
@@ -284,6 +289,22 @@ string SnapshotRecorder::getFileName(const string &typ,
 }
 
 
+string SnapshotRecorder::getFileBasename(const char   *typ,
+								 const char   *ext,
+                                         const string &origin,
+                                         WFTime        time)
+{
+	char fileName[1024];
+	sprintf(fileName, "!%s_%s_%s%3d.%s",
+		   typ,
+		   origin.c_str(),
+		   time.format("%Y%m%d%H%M%S").c_str(),
+		   (int)(time.microseconds() / 1000),
+		   ext);
+	return string(fileName);
+}
+
+
 int SnapshotRecorder::requestBufferSize()
 {
 	float fftSampleRate = backend_->getFFTSampleRate();
@@ -421,6 +442,8 @@ void WaterfallBackend::processFFT(const fftw_complex *data, int size, DataInfo i
 			data[i][1] * data[i][1]
 		);
 	}
+	
+	//LOG_DEBUG("Data stream time: " << info.timeOffset.format("%Y-%m-%d  %H:%M:%S"));
 	
 	//// Left half (0 -- half)
 	//for (int i = 0; i < halfSize; i++) {

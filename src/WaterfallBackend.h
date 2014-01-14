@@ -297,6 +297,8 @@ public:
 	virtual string getFileName(WFTime time);
 	virtual string getFileName(const string &typ, const string &origin, WFTime time);
 	
+	virtual string getFileBasename(const char *typ, const char *ext, const string &origin, WFTime time);
+	
 	virtual int requestBufferSize();
 	
 	virtual void start();

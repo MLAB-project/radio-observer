@@ -37,7 +37,7 @@ private:
 
 public:
 	/**
-	 * Constructor.
+	 * \brief Constructor.
 	 */
 	JackFrontend(bool connect, const char *leftInputName, const char *rightInputName) :
 		connect_(connect),
@@ -47,7 +47,7 @@ public:
 		rightPort_(NULL)
 	{}
 	/**
-	 * Destructor.
+	 * \brief Destructor.
 	 */
 	virtual ~JackFrontend() {}
 	

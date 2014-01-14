@@ -10,6 +10,16 @@
 #include "utils.h"
 
 
+Ref<Output> BolidRecorder::getMetadataFile(WFTime time)
+{
+	string name = getMetadataFileName(time);
+	if (metadataFile_.isNull() || (name != metadataFile_->getName())) {
+		metadataFile_ = new FileOutput(name);
+	}
+	return metadataFile_;
+}
+
+
 float BolidRecorder::average(float fromFq, float toFq)
 {
 	int lowBin = backend_->frequencyToBin(fromFq);
@@ -31,8 +41,28 @@ string BolidRecorder::getFileName(WFTime time)
 }
 
 
+string BolidRecorder::getMetadataFileName(WFTime time)
+{
+	ostringstream ss;
+	ss << "meta_" << backend_->getOrigin() << "_" << time.getHour().format("%Y%m%d%H%M%S") << ".csv";
+	
+	return Path::join(
+		metadataPath_,
+		ss.str()
+		//SnapshotRecorder::getFileBasename(
+		//	"meta",
+		//	"csv",
+		//	backend_->getOrigin(),
+		//	time.getHour()
+		//)
+	);
+}
+
+
 void BolidRecorder::start()
 {
+	// Precalculate bins from frequencies and rows from times.
+	
 	int minFqBin = backend_->frequencyToBin(minDetectFq_);
 	int maxFqBin = backend_->frequencyToBin(maxDetectFq_);
 	ORDER_PAIR(minFqBin, maxFqBin);
@@ -45,6 +75,16 @@ void BolidRecorder::start()
 	lowNoiseBin_ = min(minFqBin, maxFqBin);
 	noiseWidth_  = max(minFqBin, maxFqBin) - lowNoiseBin_;
 	noiseBuffer_.resize(noiseWidth_);
+	
+	CPPAPP_ASSERT(advanceTime_ >= 0.0);
+	CPPAPP_ASSERT(jitterTime_ >= 0.0);
+	CPPAPP_ASSERT(averageFrequencyRange_ > 0.0);
+	advance_         = backend_->timeToFFTSamples(advanceTime_);
+	jitter_          = backend_->timeToFFTSamples(jitterTime_);
+	averageBinRange_ = backend_->frequencyToBin(averageFrequencyRange_) - backend_->frequencyToBin(0);
+	CPPAPP_ASSERT(averageBinRange_ > 0);
+	
+	state_ = STATE_INIT;
 	
 	LOG_INFO("Bolid detector starting...");
 	LOG_INFO("Freq.: " << leftFrequency_ << "-" << rightFrequency_ <<
@@ -63,48 +103,95 @@ void BolidRecorder::update()
 	float n = noise(&(noiseBuffer_[0]), noiseWidth_);
 	int   p = peak(row + lowDetectBin_, detectWidth_);
 	float a = average(
-		row + lowDetectBin_ + (p - (int)(backend_->frequencyToBin(20) - backend_->frequencyToBin(0))),
-		(int)(backend_->frequencyToBin(40) - backend_->frequencyToBin(0))
+		//row + lowDetectBin_ + (p - (int)(backend_->frequencyToBin(20) - backend_->frequencyToBin(0))),
+		//(int)(backend_->frequencyToBin(40) - backend_->frequencyToBin(0))
+		
+		row + lowDetectBin_ + p - averageBinRange_ / 2,
+		averageBinRange_
 	);
 	
-	float peak_f = backend_->binToFrequency(lowDetectBin_ + p);
 	bool detect = (a > (n * 2.0));
-	if (detect) {
-		LOG_DEBUG("n = " << std::fixed << std::setprecision(5) << n <<
-				",  p = " << std::setw(5) << p <<
-				",  a = " << a <<
-				",  \033[1;31mdetect = " << detect << "\033[0m");
-	} else {
-		LOG_DEBUG("n = " << std::fixed << std::setprecision(5) << n <<
-				",  p = " << std::setw(5) << p <<
-				",  a = " << a <<
-				",  detect = " << detect);
-	}
 	
-	if (detect) {
+	switch (state_) {
+	case STATE_INIT:
+		if (detect) {
+			peakFreq_  = backend_->binToFrequency(lowDetectBin_ + p);
+			noise_ = n;
+			magnitude_ = a;
+			duration_ = 1;
+			nextSnapshot_.start = buffer_->mark() - advance_;
+			nextSnapshot_.length = 2 * advance_;
+			state_ = STATE_BOLID;
+		}
+		break;
+	
+	case STATE_BOLID:
+		if (detect) {
+			duration_ += 1;
+		} else {
+			nextSnapshot_.length += duration_;
+			duration_ = 1;
+			state_ = STATE_BOLID_ENDED;
+		}
+		break;
+	
+	case STATE_BOLID_ENDED:
 		duration_ += 1;
 		
-		if (!bolidDetected_) {	
-			nextSnapshot_.start = buffer_->mark() - (2 * backend_->getFFTSampleRate());
-			bolidDetected_ = true;
-			bolidRecord_   = true;
+		if (detect) {
+			state_ = STATE_BOLID;
+		} else {
+			if (duration_ >= jitter_) {
+				WFTime t = WFTime::now();
+				Ref<Output> metaf = getMetadataFile(t);
+				float duration = (float)(nextSnapshot_.length - 2 * advance_) / (float)backend_->getFFTSampleRate();
+				(*metaf->getStream())
+					<< metaf->getName()
+					<< "\t" << duration
+					<< "\t" << peakFreq_
+					<< "\t" << magnitude_
+					<< "\t" << noise_
+					<< std::endl;
+				
+				LOG_WARNING("************** METEOR DETECTED **************");
+				LOG_INFO("Duration: " << duration << "s" <<
+					    "  |  Frequency: " << peakFreq_ << "Hz");
+				startWriting();
+				state_ = STATE_INIT;
+			}
 		}
-	} else if (bolidDetected_) {
-		bolidDetected_ = false;
-		LOG_WARNING("********** METEOR DETECTED **********");
-		LOG_INFO("Frequency: " << peak_f <<
-			    ", magnitude: "  << a <<
-			    ", duration: " << duration_);
-		duration_ = 0;
+		break;
+	
+	default:
+		LOG_ERROR("Internal error: unknown state " << state_ << " in bolid detector!");
+		state_ = STATE_INIT;
+		break;
 	}
 	
-	if (bolidRecord_) {
-		if (buffer_->size(nextSnapshot_.start) >= snapshotRows_ + 2) {
-			LOG_DEBUG("Recording meteor...");
-			startWriting();
-			bolidRecord_ = false;
-		}
-	}
+	//if (detect) {
+	//	duration_ += 1;
+	//	
+	//	if (!bolidDetected_) {
+	//		nextSnapshot_.start = buffer_->mark() - (2 * backend_->getFFTSampleRate());
+	//		bolidDetected_ = true;
+	//		bolidRecord_   = true;
+	//	}
+	//} else if (bolidDetected_) {
+	//	bolidDetected_ = false;
+	//	LOG_WARNING("********** METEOR DETECTED **********");
+	//	LOG_INFO("Frequency: " << peak_f <<
+	//		    ", magnitude: "  << a <<
+	//		    ", duration: " << duration_);
+	//	duration_ = 0;
+	//}
+	//
+	//if (bolidRecord_) {
+	//	if (buffer_->size(nextSnapshot_.start) >= snapshotRows_ + 2) {
+	//		LOG_DEBUG("Recording meteor...");
+	//		startWriting();
+	//		bolidRecord_ = false;
+	//	}
+	//}
 }
 
 
@@ -178,7 +265,14 @@ Ref<DIObject> BolidRecorder::make(Ref<DynObject> config, Ref<DIObject> parent)
 	float minNoiseFq = config->getStrDouble("low_noise_freq",    9000);
 	float maxNoiseFq = config->getStrDouble("hi_noise_freq",    10000);
 	
-	return new BolidRecorder(
+	double advanceTime      = config->getStrDouble("advance_time",     1);
+	double jitterTime       = config->getStrDouble("jitter_time",      1);
+	float  averageFreqRange = config->getStrDouble("avg_freq_range",  40);
+	float  thresholdRatio   = config->getStrDouble("threshold",      2.0);
+	
+	string metadataPath     = config->getStrString("metadata_path",  ".");
+	
+	Ref<BolidRecorder> result = new BolidRecorder(
 		parent,
 		snapshotLength,
 		leftFrequency,
@@ -188,8 +282,17 @@ Ref<DIObject> BolidRecorder::make(Ref<DynObject> config, Ref<DIObject> parent)
 		maxDetectFq,
 		
 		minNoiseFq,
-		maxNoiseFq
+		maxNoiseFq,
+		
+		advanceTime,
+		jitterTime,
+		averageFreqRange,
+		thresholdRatio,
+		
+		metadataPath
 	);
+	
+	return result;
 }
 
 CPPAPP_DI_METHOD("bolid", BolidRecorder, make);

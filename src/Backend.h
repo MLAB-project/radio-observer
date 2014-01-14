@@ -56,6 +56,11 @@ struct StreamInfo {
 		
 		timeOffset = WFTime(0, 0);
 	}
+
+	double samplesToTime(int samples)
+	{
+		return (double)samples / (double)sampleRate;
+	}
 };
 
 
@@ -83,7 +88,7 @@ struct DataInfo {
 class Backend : public DIObject {
 private:
 	Backend(const Backend& other);
-
+	
 protected:
 	StreamInfo streamInfo_;
 	

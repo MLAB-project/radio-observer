@@ -118,10 +118,13 @@ FFTBackend::FFTBackend(int bins, int overlap) :
 	in_ = (fftw_complex *) fftw_malloc(bufferSize_);
 	out_ = (fftw_complex *) fftw_malloc(bufferSize_);
 	fftPlan_ = fftw_plan_dft_1d(bins_, in_, out_, FFTW_FORWARD, FFTW_ESTIMATE);
-	
+
 	//inMark_ = in_ + binOverlap_;
 	inMark_ = window_;
 	inEnd_ = window_ + bins_;
+	
+	windowTimes_    = new WFTime[bins_];
+	windowRawMarks_ = new int[bins_];
 }
 
 
@@ -133,6 +136,12 @@ FFTBackend::~FFTBackend()
 	fftw_free(window_);
 	fftw_free(in_);
 	fftw_free(out_);
+	
+	delete windowTimes_;
+	windowTimes_ = NULL;
+	
+	delete windowRawMarks_;
+	windowRawMarks_ = NULL;
 }
 
 
@@ -147,7 +156,7 @@ void FFTBackend::startStream(StreamInfo info)
 	
 	info_ = DataInfo();
 	
-	LOG_DEBUG("Starting FFT stream with time offset " << info.timeOffset << ", sample rate " << info.sampleRate << "Hz.");
+	rawBuffer_.resize(2, 1024 * 1024, getRawBufferSize());
 	
 	for (int i = 0; i < bins_; i++) {
 		//windowFn_[i] = sin(((float)i / (float)bufferSize_) * PI);
@@ -180,6 +189,8 @@ void FFTBackend::startStream(StreamInfo info)
 			)
 		);
 	}
+	
+	LOG_DEBUG("Starting FFT stream with time offset " << info.timeOffset << ", sample rate " << info.sampleRate << "Hz.");
 }
 
 
@@ -191,7 +202,13 @@ void FFTBackend::process(const vector<Complex> &data, DataInfo info)
 	int size = data.size();
 	const Complex *src = &(data[0]);
 	
-	info_.timeOffset = info.timeOffset;
+	//for (int i = 0; i < size; i++) {
+	//	int16_t *row = rawBuffer_.push();
+	//	row[0] = (int16_t)(src[i].real * 0x7fff);
+	//	row[1] = (int16_t)(src[i].imag * 0x7fff);
+	//}
+	
+	WFTime timeOffset = info.timeOffset;
 	
 	// Loop while there is enough remaining data for another FFT window.
 	while (size >= (inEnd_ - inMark_)) {
@@ -200,6 +217,13 @@ void FFTBackend::process(const vector<Complex> &data, DataInfo info)
 		// Copy the incoming data to the window buffer
 		//memcpy(inMark_, src, count * sizeof(in_[0]));
 		correction_.process(src, count, (Complex*)inMark_);
+		for (int i = 0; i < count; i++) {
+			floatToInt(src[i], rawBuffer_.push());
+			windowTimes_[inMark_ - window_ + i]    = timeOffset.addSamples(i, streamInfo_.sampleRate);
+			windowRawMarks_[inMark_ - window_ + i] = rawBuffer_.mark();
+		}
+		
+		info_.timeOffset = windowTimes_[0];
 		
 		// From the window buffer, copy the data to the FFT input buffer, aplying
 		// the window function
@@ -213,6 +237,8 @@ void FFTBackend::process(const vector<Complex> &data, DataInfo info)
 		
 		// Copy the overlap back to the beginning of the window buffer.
 		memmove(window_, inEnd_ - binOverlap_, binOverlap_ * sizeof(in_[0]));
+		memmove(windowTimes_,    windowTimes_ + bins_ - binOverlap_,    binOverlap_ * sizeof(windowTimes_[0]));
+		memmove(windowRawMarks_, windowRawMarks_ + bins_ - binOverlap_, binOverlap_ * sizeof(windowRawMarks_[0]));
 		
 		// Update variables to keep track of the remaining data/work.
 		inMark_ = window_ + binOverlap_;
@@ -222,8 +248,8 @@ void FFTBackend::process(const vector<Complex> &data, DataInfo info)
 		// Pass the FFT data to the derived class.
 		processFFT(out_, bins_, info_);
 		
+		timeOffset = timeOffset.addSamples(count, streamInfo_.sampleRate);
 		info_.offset++;
-		info_.timeOffset = info_.timeOffset.addSamples(count, streamInfo_.sampleRate);
 	}
 	
 	// If there are any remaining I/Q samples (but not enough for a complete
@@ -231,6 +257,12 @@ void FFTBackend::process(const vector<Complex> &data, DataInfo info)
 	if (size > 0) {
 		//memcpy(inMark_, src, size * sizeof(in_[0]));
 		correction_.process(src, size, (Complex*)inMark_);
+		for (int i = 0; i < size; i++) {
+			floatToInt(src[i], rawBuffer_.push());
+			windowTimes_[inMark_ - window_ + i]    = timeOffset.addSamples(i, streamInfo_.sampleRate);
+			windowRawMarks_[inMark_ - window_ + i] = rawBuffer_.mark();
+		}
+		
 		inMark_ += size;
 	}
 }

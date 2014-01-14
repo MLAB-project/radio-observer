@@ -9,6 +9,9 @@
 #ifndef FFTBACKEND_QYQ7WJUZ
 #define FFTBACKEND_QYQ7WJUZ
 
+
+#include <cfloat>
+
 #include <fftw3.h>
 
 #include "Backend.h"
@@ -58,15 +61,28 @@ private:
 	fftw_complex *inMark_;    //< points to the current position in the FFTBackend::window_ buffer
 	fftw_complex *inEnd_;     //< points to the item after the last in the FFTBackend::window_ buffer
 	
+	WFTime       *windowTimes_;
+	int          *windowRawMarks_;
+	
 	fftw_complex *in_, *out_; //< input and output FFT buffers
 	fftw_plan     fftPlan_;
 	
 	DataInfo      info_;
 	
+	inline void floatToInt(Complex c, int16_t *result) const
+	{
+		result[0] = (int16_t)(c.real * 0x7fff);
+		result[1] = (int16_t)(c.imag * 0x7fff);
+	}
+
 protected:
 	int   bins_; //< Number of FFT output bins.
 	/// Number of FFT results per second (Hz).
 	float fftSampleRate_;
+	
+	RingBuffer2D<int16_t> rawBuffer_;
+	
+	virtual int getRawBufferSize() { return 1024; }
 	
 	virtual void processFFT(const fftw_complex *data, int size, DataInfo info) {}
 	

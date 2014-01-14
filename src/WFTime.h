@@ -23,10 +23,24 @@ using namespace std;
 
 
 /**
- * \todo Write documentation for class WFTime.
+ * \brief Represents both specific time and time interval.
  */
 struct WFTime {
 public:
+	struct Info {
+		int year;
+		int month;
+		int day;
+
+		int hour;
+		int min;
+		int sec;
+		
+		Info(int year = 0, int month = 0, int day = 0, int hour = 0, int min = 0, int sec = 0) :
+			year(year), month(month), day(day), hour(hour), min(min), sec(sec)
+		{}
+	};
+	
 	struct timeval time;
 	
 	inline time_t seconds() const { return time.tv_sec; }
@@ -79,8 +93,48 @@ public:
 		//);
 	}
 	
+	//inline WFTime subSamples(int sampleCount, int sampleRate)
+	//{
+	//	long microseconds = (((double)sampleCount / (double)sampleRate) *
+	//					 (double)US_IN_SECOND);
+	//	return subMicroseconds(microseconds);
+	//}
+	
+	inline Info getInfo(bool local = false)
+	{
+		time_t timestamp = seconds();
+		struct tm *info = local ? localtime(&timestamp) : gmtime(&timestamp);
+		
+		return Info(
+			info->tm_year,
+			info->tm_mon,
+			info->tm_mday,
+			info->tm_hour,
+			info->tm_min,
+			info->tm_sec
+		);
+	}
+	
 	/**
-	 * Formats the time using a format string.
+	 * \brief Returns the same time rounded down to an hour.
+	 */
+	inline WFTime getHour(bool local = false)
+	{
+		// Get time info structure
+		time_t timestamp = seconds();
+		struct tm *timeInfo = local ? localtime(&timestamp) : gmtime(&timestamp);
+		
+		// Remove minute and second information
+		timeInfo->tm_min = 0;
+		timeInfo->tm_sec = 0;
+		
+		// Return the result
+		timestamp = mktime(timeInfo);
+		return WFTime(timestamp, 0);
+	}
+	
+	/**
+	 * \brief Formats the time using a format string.
 	 * 
 	 * The syntax of the format string is the same as for the standard
 	 * strftime function (see $ man strftime).
@@ -138,6 +192,12 @@ inline bool operator<(const WFTime& lhs, const WFTime& rhs)
 inline bool operator!=(const WFTime& lhs, const WFTime& rhs)
 {
 	return timercmp(&(lhs.time), &(rhs.time), !=);
+}
+
+
+inline bool operator==(const WFTime& lhs, const WFTime& rhs)
+{
+	return !(lhs != rhs);
 }
 
 

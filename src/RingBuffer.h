@@ -82,7 +82,7 @@ public:
 	{}
 	
 	/**
-	 * Constructor.
+	 * \brief Constructor.
 	 */
 	RingBuffer(int capacity) :
 		capacity_(0), items_(NULL), head_(NULL), size_(0)
@@ -92,7 +92,7 @@ public:
 	}
 	
 	/**
-	 * Copy constructor.
+	 * \brief Copy constructor.
 	 */
 	RingBuffer(const RingBuffer& other) :
 		capacity_(0), items_(NULL), head_(NULL), size_(0)
