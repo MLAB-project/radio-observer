@@ -23,6 +23,10 @@ Compilation
    On a debian system, they can by installed using:
    `sudo apt-get install libfftw3-dev cfitsio-dev clang`
 
+on Ubuntu run:
+
+`sudo apt-get install libfftw3-dev cfitsio-dev libjack-jackd2-dev`
+
 2. Clone the repository using (for instance):
    `git clone https://github.com/MLAB-project/radio-observer.git`.
    
@@ -69,6 +73,8 @@ Despite there being a `log_file` configuration option, the log is currently
 written only to the stderr.  To append it to a file, do output redirection (`$
 waterfall 2> your_log_file.log`).
 
+Fits file handling: FITS can be converted in png by fits2png script. 
+`sudo apt-get install python-pyfits`
 
 ChangeLog
 ---------
