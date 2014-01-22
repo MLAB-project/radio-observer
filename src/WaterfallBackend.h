@@ -189,16 +189,19 @@ class WaterfallBackend;
  */
 class Recorder : public DIObject {
 protected:
-	Ref<WaterfallBackend>  backend_; ///< This recorder's backend.
-	RingBuffer2D<float>   *buffer_; ///< FFT data buffer to record from.
-	Mutex                 *bufferMutex_; ///< Controls access to \ref buffer_.
-	vector<RawDataHandle> *rawHandles_;
+	Ref<WaterfallBackend>   backend_; ///< This recorder's backend.
+	RingBuffer2D<float>    *buffer_; ///< FFT data buffer to record from.
+	FFTBackend::IQBuffer   *rawBuffer_; ///< I/Q data buffer to record from.
+	Mutex                  *bufferMutex_; ///< Controls access to \ref buffer_.
+	vector<RawDataHandle>  *rawHandles_;
 	
 public:
 	Recorder(Ref<WaterfallBackend>  backend):
 		backend_(backend),
 		buffer_(NULL),
-		bufferMutex_(NULL)
+		rawBuffer_(NULL),
+		bufferMutex_(NULL),
+		rawHandles_(NULL)
 	{}
 	
 	virtual ~Recorder() {
@@ -207,9 +210,13 @@ public:
 		bufferMutex_ = NULL;
 	}
 	
-	void setBuffer(RingBuffer2D<float> *buffer, Mutex *bufferMutex, vector<RawDataHandle> *rawHandles)
+	void setBuffer(RingBuffer2D<float> *buffer,
+				FFTBackend::IQBuffer *rawBuffer,
+				Mutex *bufferMutex,
+				vector<RawDataHandle> *rawHandles)
 	{
 		buffer_      = buffer;
+		rawBuffer_   = rawBuffer;
 		bufferMutex_ = bufferMutex;
 		rawHandles_  = rawHandles;
 	}
@@ -338,12 +345,15 @@ public:
  *
  */
 class WaterfallBackend : public FFTBackend {
+public:
+	typedef RingBuffer2D<float> FFTBuffer;
+
 private:
 	WaterfallBackend(const WaterfallBackend& other);
 	
 	string           origin_;
 	
-	RingBuffer2D<float>   buffer_;
+	FFTBuffer             buffer_;
 	Mutex                 bufferMutex_;
 	vector<RawDataHandle> rawHandles_;
 	

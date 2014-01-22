@@ -1,0 +1,63 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+"""fits2wav module.
+
+Author: Jan Milík <milikjan@fit.cvut.cz>
+"""
+
+
+import sys
+import argparse
+import wave
+
+
+try:
+    import pyfits
+except ImportError:
+    sys.exit("ERROR: pyfits library not found!")
+
+
+def convert(fits, wav):
+    img = fits[0]
+    
+    if "NAXIS" not in img.header:
+        raise Exception("Image doesn't have NAXIS header.")
+    
+    if img.header["NAXIS"] <> 2:
+        raise Exception("Expected 2 dimensional image.")
+    
+    width = img.header["NAXIS%d" % (1, )]
+    height = img.header["NAXIS%d" % (2, )]
+    print "Sample count: %d" % (height, )
+    
+    if width <> 2:
+        raise Exception("Expected image of width 2. Actual width: %d." % (width, ))
+    
+    wav.setnchannels(2)
+    wav.setsampwidth(2)
+    wav.setframerate(44800)
+    
+    for i in range(height):
+        wav.writeframes(img.data[i])
+
+
+def convert_filename(filename):
+    fits = pyfits.open(filename)
+    wav = wave.open(filename + ".wav", "w")
+    convert(fits, wav)
+
+
+def main():
+    parser = argparse.ArgumentParser(description = __doc__)
+    parser.add_argument("files", metavar = "FILE", nargs = "+",
+                        help = "a FITS file to convert to WAV")
+    
+    args = parser.parse_args()
+    
+    for file_name in args.files:
+        convert_filename(file_name)
+
+
+if __name__ == "__main__":
+    main()
+

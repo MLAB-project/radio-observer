@@ -56,6 +56,9 @@ struct RawDataHandle {
  * WaterfallBackend) can record them.
  */
 class FFTBackend : public Backend {
+public:
+	typedef RingBuffer2D<float> IQBuffer;
+
 private:
 	FFTBackend(const FFTBackend& other);
 	
@@ -85,9 +88,10 @@ protected:
 	/// Number of FFT results per second (Hz).
 	float fftSampleRate_;
 	
-	RingBuffer2D<int16_t> rawBuffer_; ///< contains raw I/Q data
+	//RingBuffer2D<int16_t> rawBuffer_; ///< contains raw I/Q data
+	IQBuffer rawBuffer_; ///< contains raw I/Q data
 	
-	virtual int getRawBufferSize() { return 1024; }
+	//virtual int getRawBufferSize() { return 1024; }
 	
 	virtual void processFFT(const fftw_complex *data, int size, DataInfo info, int rawMark) {}
 	
@@ -116,7 +120,7 @@ public:
 	
 	void resizeRawBuffer(int sampleCount)
 	{
-		rawBuffer_.resize(2, 1024 * 1024, getRawBufferSize());
+		rawBuffer_.resize(2, 1024 * 1024, sampleCount);
 	}
 	
 	inline float binToFrequency(int bin) const
@@ -198,6 +202,12 @@ public:
 	{
 		result[0] = (int16_t)(c.real * 0x7fff);
 		result[1] = (int16_t)(c.imag * 0x7fff);
+	}
+	
+	inline static void floatToInt(Complex c, float *result)
+	{
+		result[0] = (float)c.real;
+		result[1] = (float)c.imag;
 	}
 };
 

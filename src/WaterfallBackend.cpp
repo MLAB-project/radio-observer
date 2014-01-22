@@ -182,7 +182,8 @@ void SnapshotRecorder::write(Snapshot snapshot)
 	// Original code:
 	// WFTime time = outBuffer_.times[0];
 	// Hotfix:
-	WFTime time   = WFTime::now();
+	//WFTime time   = WFTime::now();
+	WFTime time   = fftMarkToTime(snapshot.start);
 	string origin = backend_->getOrigin();
 	
 	int start  = snapshot.start;
@@ -264,7 +265,8 @@ void SnapshotRecorder::writeRaw(Snapshot snapshot)
 	if (!w.open(fileName.c_str()))
 		return;
 	
-	w.createImage(2, length, SHORT_IMG);
+	w.createImage(2, length, FLOAT_IMG);
+	//w.createImage(2, length, SHORT_IMG);
 	
 	w.comment("File created by " PACKAGE_STRING ".");
 	w.comment("See " PACKAGE_URL ".");
@@ -287,7 +289,7 @@ void SnapshotRecorder::writeRaw(Snapshot snapshot)
 	
 	int rowIndex = start;
 	for (int y = 0; y < length; y++, rowIndex++) {
-		w.write(y, 1, buffer_->at(rowIndex));
+		w.write(y, 1, rawBuffer_->at(rowIndex));
 	}
 	
 	w.checkStatus("Error occured while writing data to a FITS file.");
@@ -538,7 +540,7 @@ WaterfallBackend::~WaterfallBackend()
 void WaterfallBackend::addRecorder(Ref<Recorder> recorder)
 {
 	recorders_.push_back(recorder);
-	recorder->setBuffer(&buffer_, &bufferMutex_, &rawHandles_);
+	recorder->setBuffer(&buffer_, &rawBuffer_, &bufferMutex_, &rawHandles_);
 }
 
 
