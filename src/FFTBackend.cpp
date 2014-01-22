@@ -152,8 +152,6 @@ void FFTBackend::startStream(StreamInfo info)
 	
 	info_ = DataInfo();
 	
-	rawBuffer_.resize(2, 1024 * 1024, getRawBufferSize());
-	
 	for (int i = 0; i < bins_; i++) {
 		//windowFn_[i] = sin(((float)i / (float)bufferSize_) * PI);
 		//windowFn_[i] = 0.5 * (

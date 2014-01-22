@@ -560,6 +560,9 @@ void WaterfallBackend::startStream(StreamInfo info)
 	buffer_.resize(getBins(), WATERFALL_BACKEND_CHUNK_SIZE, bufferSize);
 	rawHandles_.resize(buffer_.getCapacity());
 	
+	resizeRawBuffer(fftSamplesToRaw(bufferSize));
+	LOG_DEBUG("Number of raw samples in the buffer = " << fftSamplesToRaw(bufferSize));
+	
 	FOR_EACH(recorders_, it) {
 		(*it)->start();
 	}

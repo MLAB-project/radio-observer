@@ -51,6 +51,9 @@ struct RawDataHandle {
 
 /**
  * \brief Base class for backends that compute and process FFT from I/Q signal.
+ *
+ * This class also buffers the raw I/Q data so that any subclasses (\ref
+ * WaterfallBackend) can record them.
  */
 class FFTBackend : public Backend {
 private:
@@ -82,7 +85,7 @@ protected:
 	/// Number of FFT results per second (Hz).
 	float fftSampleRate_;
 	
-	RingBuffer2D<int16_t> rawBuffer_; ///< contains raw sound data
+	RingBuffer2D<int16_t> rawBuffer_; ///< contains raw I/Q data
 	
 	virtual int getRawBufferSize() { return 1024; }
 	
@@ -110,6 +113,11 @@ public:
 	virtual void startStream(StreamInfo info);
 	virtual void process(const vector<Complex> &data, DataInfo info);
 	virtual void endStream();
+	
+	void resizeRawBuffer(int sampleCount)
+	{
+		rawBuffer_.resize(2, 1024 * 1024, getRawBufferSize());
+	}
 	
 	inline float binToFrequency(int bin) const
 	{

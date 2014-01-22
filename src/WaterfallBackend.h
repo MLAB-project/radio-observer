@@ -219,6 +219,9 @@ public:
 	
 	inline int fftMarkToRaw(int mark);
 	inline WFTime fftMarkToTime(int mark);
+	/**
+	 * \brief Converts number of FFT samples to number raw I/Q samples.
+	 */
 	inline int fftSamplesToRaw(int sampleCount);
 	
 	virtual int requestBufferSize() { return 0; }
@@ -365,6 +368,12 @@ public:
 	virtual bool injectDependency(Ref<DIObject> obj, std::string key);
 
 	static Ref<DIObject> make(Ref<DynObject> config, Ref<DIObject> parent);
+	
+	inline int fftSamplesToRaw(int sampleCount)
+	{
+		double sampleRate = getStreamInfo().sampleRate;
+		return ((double)sampleCount / (double)getFFTSampleRate()) * (double)sampleRate;
+	}
 };
 
 
