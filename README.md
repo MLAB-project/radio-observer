@@ -20,12 +20,9 @@ Compilation
       - cfitsio (http://heasarc.gsfc.nasa.gov/fitsio/)
       - JACK (http://jackaudio.org/download)
    
-   On a debian system, they can by installed using:
-   `sudo apt-get install libfftw3-dev cfitsio-dev clang`
-
-on Ubuntu run:
-
-`sudo apt-get install libfftw3-dev cfitsio-dev libjack-jackd2-dev`
+   On a debian system (Ubuntu), they can by installed using:
+   
+        $ sudo apt-get install libfftw3-dev cfitsio-dev libjack-jackd2-dev clang
 
 2. Clone the repository using (for instance):
    `git clone https://github.com/MLAB-project/radio-observer.git`.
