@@ -1,0 +1,33 @@
+digraph "src/Pipeline.cpp"
+{
+  edge [fontname="FreeSans",fontsize="10",labelfontname="FreeSans",labelfontsize="10"];
+  node [fontname="FreeSans",fontsize="10",shape=record];
+  Node1 [label="src/Pipeline.cpp",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled" fontcolor="black"];
+  Node1 -> Node2 [color="midnightblue",fontsize="10",style="solid",fontname="FreeSans"];
+  Node2 [label="Pipeline.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$_pipeline_8h.html",tooltip="Header file for the Pipeline class. "];
+  Node2 -> Node3 [color="midnightblue",fontsize="10",style="solid",fontname="FreeSans"];
+  Node3 [label="cppapp/cppapp.h",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled"];
+  Node2 -> Node4 [color="midnightblue",fontsize="10",style="solid",fontname="FreeSans"];
+  Node4 [label="Frontend.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$_frontend_8h.html",tooltip="Header file for the Frontend class. "];
+  Node4 -> Node5 [color="midnightblue",fontsize="10",style="solid",fontname="FreeSans"];
+  Node5 [label="cppapp/Object.h",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled"];
+  Node4 -> Node6 [color="midnightblue",fontsize="10",style="solid",fontname="FreeSans"];
+  Node6 [label="Backend.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$_backend_8h.html",tooltip="Header file for the Backend class. "];
+  Node6 -> Node7 [color="midnightblue",fontsize="10",style="solid",fontname="FreeSans"];
+  Node7 [label="vector",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled"];
+  Node6 -> Node3 [color="midnightblue",fontsize="10",style="solid",fontname="FreeSans"];
+  Node6 -> Node8 [color="midnightblue",fontsize="10",style="solid",fontname="FreeSans"];
+  Node8 [label="WFTime.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$_w_f_time_8h.html",tooltip="Header file for the WFTime class. "];
+  Node8 -> Node9 [color="midnightblue",fontsize="10",style="solid",fontname="FreeSans"];
+  Node9 [label="ostream",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled"];
+  Node8 -> Node10 [color="midnightblue",fontsize="10",style="solid",fontname="FreeSans"];
+  Node10 [label="ctime",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled"];
+  Node8 -> Node11 [color="midnightblue",fontsize="10",style="solid",fontname="FreeSans"];
+  Node11 [label="sys/time.h",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled"];
+  Node8 -> Node12 [color="midnightblue",fontsize="10",style="solid",fontname="FreeSans"];
+  Node12 [label="utils.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$utils_8h.html",tooltip="Header file for the utils class. "];
+  Node12 -> Node13 [color="midnightblue",fontsize="10",style="solid",fontname="FreeSans"];
+  Node13 [label="utility",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled"];
+  Node12 -> Node3 [color="midnightblue",fontsize="10",style="solid",fontname="FreeSans"];
+  Node2 -> Node6 [color="midnightblue",fontsize="10",style="solid",fontname="FreeSans"];
+}
