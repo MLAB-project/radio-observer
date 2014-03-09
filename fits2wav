@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """fits2wav module.
 
+This is a utility for converting FITS files to WAV format.
+
 Author: Jan Milík <milikjan@fit.cvut.cz>
 """
 
@@ -9,6 +11,7 @@ Author: Jan Milík <milikjan@fit.cvut.cz>
 import sys
 import argparse
 import wave
+import struct
 
 
 try:
@@ -17,7 +20,50 @@ except ImportError:
     sys.exit("ERROR: pyfits library not found!")
 
 
-def convert(fits, wav):
+SAMPLE = struct.Struct("=hh")
+
+
+def float32_wav_file(sample_array, sample_rate):
+    num_channels     = 2
+    bits_per_sample  = 32
+    #sample_rate      = 44800
+    
+    num_samples = len(sample_array)
+    byte_rate   = sample_rate * num_channels * (bits_per_sample / 8)
+    block_align = num_channels * (bits_per_sample / 8)
+    
+    byte_count = num_samples * num_channels * (bits_per_sample / 8)
+    
+    #byte_count = (len(sample_array)) * 2 * 4  # 32-bit floats
+    byte_count = num_samples * num_channels * (bits_per_sample / 8)
+    wav_file   = ""
+    
+    # write the header
+    wav_file += struct.pack('<ccccIccccccccIHHIIHH',
+        'R', 'I', 'F', 'F',
+        byte_count + 0x2c - 8,  # chunk size
+        'W', 'A', 'V', 'E',     # format
+        'f', 'm', 't', ' ',
+        0x10,                   # size of 'fmt ' subchunk
+        3,                      # format 3 = floating-point PCM
+        num_channels,           # channels
+        sample_rate,            # samples / second
+        byte_rate,              # bytes / second
+        block_align,            # block alignment
+        bits_per_sample)        # bits / sample
+    
+    # DATA subchunk
+    wav_file += struct.pack('<ccccI',
+        'd', 'a', 't', 'a',
+        byte_count              # size of the 'data' subchunk
+    )
+    for sample in sample_array:
+        wav_file += struct.pack("<ff", sample[0], sample[1])
+    
+    return wav_file
+
+
+def convert(fits):
     img = fits[0]
     
     if "NAXIS" not in img.header:
@@ -28,23 +74,45 @@ def convert(fits, wav):
     
     width = img.header["NAXIS%d" % (1, )]
     height = img.header["NAXIS%d" % (2, )]
-    print "Sample count: %d" % (height, )
+
+    print "Width: %d" % (width, )
+    print "Height: %d" % (height, )
     
-    if width <> 2:
-        raise Exception("Expected image of width 2. Actual width: %d." % (width, ))
+    if (width % 2) == 1:
+        raise Exception("Expected image with width a multiple of 2. Actual width: %d." % (width, ))
     
-    wav.setnchannels(2)
-    wav.setsampwidth(2)
-    wav.setframerate(44800)
+    sample_count = height * (width / 2)
+    print "Samples per row: %d" % (width / 2, )
+    print "Sample count: %d" % (sample_count, )
     
-    for i in range(height):
-        wav.writeframes(img.data[i])
+    #if width <> 2:
+    #   raise Exception("Expected image of width 2. Actual width: %d." % (width, ))
+    
+    #wav.setnchannels(2)
+    #wav.setsampwidth(2)
+    #wav.setframerate(44800)
+    
+    sample_array = []
+    
+    if width == 2:
+        for i in range(height):
+            #wav.writeframes(img.data[i])
+            #wav.writeframes(SAMPLE.pack(img.data[i][0] * 0x7fff, img.data[i][1] * 0x7fff))
+            print "%f\t%f" % (img.data[i][0], img.data[i][1], )
+            sample_array.append(img.data[i] * 10)
+    else:
+        for y in range(height):
+            for x in range(0, width, 2):
+                wav.writeframes(img.data[y][x:(x + 2)])
+    
+    return float32_wav_file(sample_array, 44800)
 
 
 def convert_filename(filename):
     fits = pyfits.open(filename)
-    wav = wave.open(filename + ".wav", "w")
-    convert(fits, wav)
+    #wav = wave.open(filename + ".wav", "w")
+    #convert(fits, wav)
+    return convert(fits)
 
 
 def main():
@@ -55,7 +123,8 @@ def main():
     args = parser.parse_args()
     
     for file_name in args.files:
-        convert_filename(file_name)
+        with open(file_name + ".wav", "wb") as f:
+            f.write(convert_filename(file_name))
 
 
 if __name__ == "__main__":
