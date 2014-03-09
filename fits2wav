@@ -19,6 +19,16 @@ try:
 except ImportError:
     sys.exit("ERROR: pyfits library not found!")
 
+try:
+    import scipy.io.wavfile
+except ImportError:
+    sys.exit("ERROR: scipy.io.wavfile library not found!")
+
+try:
+    import numpy
+except ImportError:
+    sys.exit("ERROR: numpy library not found!")
+
 
 SAMPLE = struct.Struct("=hh")
 
@@ -39,7 +49,7 @@ def float32_wav_file(sample_array, sample_rate):
     wav_file   = ""
     
     # write the header
-    wav_file += struct.pack('<ccccIccccccccIHHIIHH',
+    wav_file += struct.pack('<ccccIccccccccIHHIIHHH',
         'R', 'I', 'F', 'F',
         byte_count + 0x2c - 8,  # chunk size
         'W', 'A', 'V', 'E',     # format
@@ -50,7 +60,9 @@ def float32_wav_file(sample_array, sample_rate):
         sample_rate,            # samples / second
         byte_rate,              # bytes / second
         block_align,            # block alignment
-        bits_per_sample)        # bits / sample
+        bits_per_sample,        # bits / sample
+        0                       # extra param size 
+    )        
     
     # DATA subchunk
     wav_file += struct.pack('<ccccI',
@@ -63,7 +75,7 @@ def float32_wav_file(sample_array, sample_rate):
     return wav_file
 
 
-def convert(fits):
+def convert(fits, out_filename):
     img = fits[0]
     
     if "NAXIS" not in img.header:
@@ -92,27 +104,32 @@ def convert(fits):
     #wav.setsampwidth(2)
     #wav.setframerate(44800)
     
-    sample_array = []
+    sample_array = numpy.zeros((sample_count, 2), dtype = numpy.float)
     
     if width == 2:
         for i in range(height):
             #wav.writeframes(img.data[i])
             #wav.writeframes(SAMPLE.pack(img.data[i][0] * 0x7fff, img.data[i][1] * 0x7fff))
             print "%f\t%f" % (img.data[i][0], img.data[i][1], )
-            sample_array.append(img.data[i] * 10)
+            #sample_array.append(img.data[i] * 10)
+            sample_array[i] = img.data[i]
     else:
         for y in range(height):
             for x in range(0, width, 2):
                 wav.writeframes(img.data[y][x:(x + 2)])
     
-    return float32_wav_file(sample_array, 44800)
+    #return float32_wav_file(sample_array, 44800)
+    
+    scaled = numpy.int16(sample_array / numpy.max(numpy.abs(sample_array)) * 32767) 
+    
+    return scipy.io.wavfile.write(out_filename, 44800, scaled)
 
 
 def convert_filename(filename):
     fits = pyfits.open(filename)
     #wav = wave.open(filename + ".wav", "w")
     #convert(fits, wav)
-    return convert(fits)
+    return convert(fits, filename + ".wav")
 
 
 def main():
@@ -123,8 +140,9 @@ def main():
     args = parser.parse_args()
     
     for file_name in args.files:
-        with open(file_name + ".wav", "wb") as f:
-            f.write(convert_filename(file_name))
+        convert_filename(file_name)
+        #with open(file_name + ".wav", "wb") as f:
+        #   f.write(convert_filename(file_name))
 
 
 if __name__ == "__main__":
