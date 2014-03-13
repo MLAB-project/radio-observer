@@ -104,7 +104,7 @@ def convert(fits, out_filename):
     #wav.setsampwidth(2)
     #wav.setframerate(44800)
     
-    sample_array = numpy.zeros((sample_count, 2), dtype = numpy.float)
+    sample_array = numpy.zeros((sample_count, 2), dtype = "float32")
     
     if width == 2:
         for i in range(height):
@@ -121,7 +121,7 @@ def convert(fits, out_filename):
     #return float32_wav_file(sample_array, 44800)
     
     #scaled = numpy.int16(sample_array / numpy.max(numpy.abs(sample_array)) * 32767) 
-
+    
     return scipy.io.wavfile.write(out_filename, 44800, sample_array)
 
 
