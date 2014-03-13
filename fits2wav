@@ -54,7 +54,7 @@ def float32_wav_file(sample_array, sample_rate):
         byte_count + 0x2c - 8,  # chunk size
         'W', 'A', 'V', 'E',     # format
         'f', 'm', 't', ' ',
-        0x10,                   # size of 'fmt ' subchunk
+        0x12,                   # size of 'fmt ' subchunk
         3,                      # format 3 = floating-point PCM
         num_channels,           # channels
         sample_rate,            # samples / second
