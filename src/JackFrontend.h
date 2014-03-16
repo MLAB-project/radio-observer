@@ -34,6 +34,9 @@ private:
 	jack_port_t *rightPort_;
 	
 	vector<Complex> outputBuffer_;
+	
+	jack_port_t *midiPort_;
+	char         midiBuffer_[1024];
 
 public:
 	/**

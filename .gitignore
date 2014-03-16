@@ -7,6 +7,8 @@ waterfall
 waterfall-*-docs.html.tar.gz
 docs
 
+*.pyc
+
 *.fits
 *.wav
 *.png

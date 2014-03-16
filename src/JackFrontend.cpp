@@ -87,8 +87,18 @@ void JackFrontend::run()
 							  JACK_DEFAULT_AUDIO_TYPE,
 							  JackPortIsInput, 0);
 	
+	midiPort_ = jack_port_register(client,
+							 "midi_out",
+							 JACK_DEFAULT_MIDI_TYPE,
+							 JackPortIsOutput, 0);
+	
 	if ((leftPort_ == NULL) || (rightPort_ == NULL)) {
 		LOG_ERROR("No more JACK ports available.");
+		return;
+	}
+
+	if (midiPort_ == NULL) {
+		LOG_ERROR("Cannot create MIDI output port.");
 		return;
 	}
 	
