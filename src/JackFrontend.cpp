@@ -33,6 +33,32 @@ int JackFrontend::onJackInput(jack_nframes_t nframes, void *arg)
 	
 	self->process(self->outputBuffer_);
 	
+	void *midiPortBuffer = jack_port_get_buffer(self->midiPort_, nframes);
+	
+	if (self->midiMessageWaiting_) {
+		if (self->midiMutex_.tryLock()) {
+			for (size_t i = 0; i < self->midiQueue_.size(); i++) {
+				string *msg = self->midiQueue_[i];
+				self->midiQueue_[i] = NULL;
+				
+				unsigned char *buffer = jack_midi_event_reserve(
+					midiPortBuffer,
+					0,
+					msg->size() + 3
+				);
+				buffer[0] = 0xf0;
+				buffer[1] = 0x7d;
+				memcpy(buffer + 2, msg->c_str(), msg->size());
+				buffer[msg->size() + 2] = 0xf7;
+				
+				delete msg;
+			}
+			self->midiQueue_.clear();
+			self->midiMessageWaiting_ = false;
+			self->midiMutex_.unlock();
+		}
+	}
+	
 	return 0;
 }
 
@@ -96,7 +122,7 @@ void JackFrontend::run()
 		LOG_ERROR("No more JACK ports available.");
 		return;
 	}
-
+	
 	if (midiPort_ == NULL) {
 		LOG_ERROR("Cannot create MIDI output port.");
 		return;
@@ -121,6 +147,9 @@ void JackFrontend::run()
 		}
 	}
 	
+	MessageDispatch<BolidMessage>::getInstance().addListener(new BolidMessageListener(this));
+	MessageDispatch<HeartBeatMessage>::getInstance().addListener(new HeartBeatMessageListener(this));
+	
 	// Yep, active waiting. Pretty much.
 	while (!stopping_) {
 		sleep(2);
@@ -129,6 +158,53 @@ void JackFrontend::run()
 	endStream();
 	
 	jack_client_close(client);
+}
+
+
+void JackFrontend::sendMessage(const char *msg, size_t length)
+{
+	sendMidiMessage(msg, length);
+}
+
+
+void JackFrontend::sendMidiMessage(const char *msg, size_t length)
+{
+	MutexLock lock(&midiMutex_);
+	
+	midiQueue_.push_back(new string(msg, length));
+	midiMessageWaiting_ = true;
+}
+
+
+void BolidMessageListener::sendMessage(const BolidMessage &msg)
+{
+	char buffer[1024];
+	
+	size_t length = sprintf(
+		buffer,
+		"mlab.radio_event.bolid:%d,%d,%d,%d,%s",
+		msg.minFreq,
+		msg.maxFreq,
+		msg.startSample,
+		msg.endSample,
+		""
+	);
+	
+	frontend_->sendMidiMessage(buffer, length);
+}
+
+
+void HeartBeatMessageListener::sendMessage(const HeartBeatMessage &msg)
+{
+	char buffer[1024];
+		
+	size_t length = sprintf(
+		buffer,
+		"mlab.radio_event.heartbeat:%d",
+		(int)msg.timestamp
+	);
+	
+	frontend_->sendMidiMessage(buffer, length);
 }
 
 

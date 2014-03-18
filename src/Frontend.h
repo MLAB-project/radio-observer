@@ -43,6 +43,10 @@ public:
 	virtual void run() = 0;
 	
 	virtual void stop();
+	
+	virtual void sendMessage(const char *msg, size_t length);
+	
+	virtual void sendMessage(const char *msgType, const char *msgData, size_t dataLength);
 };
 
 #endif /* end of include guard: FRONTEND_OBVGMG1U */
