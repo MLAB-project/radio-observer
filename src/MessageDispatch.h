@@ -14,6 +14,9 @@
 using namespace cppapp;
 
 
+/**
+ * \brief MessageListener listens to messages sent to a \ref MessageListener.
+ */
 template<class T>
 class MessageListener : public Object {
 public:
@@ -40,7 +43,9 @@ public:
 
 
 /**
- * \todo Write documentation for class MessageDispatch.
+ * \brief Class dispatching messages to a collection of message listeners.
+ *
+ * \see MessageListener
  */
 template<class T>
 class MessageDispatch {
@@ -62,6 +67,11 @@ public:
 	 */
 	virtual ~MessageDispatch() {}
 	
+	/**
+	 * \brief Sends a message \c msg to all registered listeners.
+	 *
+	 * Listeners are registered by the \ref MessageDispatch::addListener method.
+	 */
 	void sendMessage(const T &msg)
 	{
 		FOR_EACH(listeners_, it) {
