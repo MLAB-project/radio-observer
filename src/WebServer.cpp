@@ -51,3 +51,17 @@ int* WebServer::threadWorker()
 }
 
 
+bool WebServer::injectDependency(Ref<DIObject> obj, std::string key)
+{
+	return false;
+}
+
+
+Ref<DIObject> WebServer::make(Ref<DynObject> config, Ref<DIObject> parent)
+{
+	return new WebServer();
+}
+
+CPPAPP_DI_METHOD("webserver", WebServer, make);
+
+

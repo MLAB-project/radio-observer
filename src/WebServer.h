@@ -17,7 +17,7 @@ using namespace cppapp;
 /**
  * \todo Write documentation for class WebServer.
  */
-class WebServer : public Object {
+class WebServer : public DIObject {
 private:
 	/**
 	 * \brief Copy constructor.
@@ -43,6 +43,10 @@ public:
 	
 	void start();
 	void stop();
+	
+	virtual bool injectDependency(Ref<DIObject> obj, std::string key);
+	
+	static Ref<DIObject> make(Ref<DynObject> config, Ref<DIObject> parent);
 };
 
 #endif /* end of include guard: WEBSERVER_XIYC92MT */
