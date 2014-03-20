@@ -178,6 +178,8 @@ int App::onRun()
 	if (pipeline_->getFrontend().isNull())
 		pipeline_->setFrontend(createFrontend());
 	
+	webServer_ = new WebServer();
+	
 	//frontend_ = createFrontend();
 	//backend_  = createBackend();
 	
@@ -186,9 +188,12 @@ int App::onRun()
 	Signal::INT.install();
 	Signal::INT.pushMethod(this, &App::interruptHandler);
 	//frontend_->run();
+	webServer_->start();
 	pipeline_->run();
 	Signal::INT.pop();
 	Signal::INT.uninstall();
+	
+	webServer_->stop();
 	
 	// WAVStream stream(input_);
 	// //Ref<Backend> backend = new SimpleWaterfallBackend(output(), 0.2, 0.1);

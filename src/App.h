@@ -21,6 +21,7 @@ using namespace cppapp;
 #include "JackFrontend.h"
 #include "WaterfallBackend.h"
 #include "Signal.h"
+#include "WebServer.h"
 
 
 /**
@@ -39,6 +40,8 @@ protected:
 	Ref<Pipeline> pipeline_;
 	//Ref<Frontend> frontend_;
 	//Ref<Backend>  backend_;
+	
+	Ref<WebServer> webServer_;
 	
 	Ref<Frontend> createFrontend();
 	// Ref<Backend>  createBackend();
