@@ -6,6 +6,7 @@
  * \brief  Implementation file for the BolidRecorder class.
  */
 
+
 #include "BolidRecorder.h"
 #include "utils.h"
 
@@ -152,6 +153,17 @@ void BolidRecorder::update()
 					<< "\t" << magnitude_
 					<< "\t" << noise_
 					<< std::endl;
+				
+				MessageDispatch<BolidMessage>::getInstance().sendMessage(BolidMessage(
+					peakFreq_ - (maxDetectFq_ - minDetectFq_) / 4,
+					peakFreq_ + (maxDetectFq_ - minDetectFq_) / 4,
+					nextSnapshot_.start,
+					nextSnapshot_.start + nextSnapshot_.length,
+					
+					peakFreq_,
+					magnitude_,
+					noise_
+				));
 				
 				LOG_WARNING("************** METEOR DETECTED **************");
 				LOG_INFO("Duration: " << duration << "s" <<

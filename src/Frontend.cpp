@@ -58,3 +58,22 @@ void Frontend::stop()
 }
 
 
+void Frontend::sendMessage(const char *msg, size_t length)
+{
+	cerr.write(msg, length);
+	cerr.flush();
+}
+
+
+void Frontend::sendMessage(const char *msgType, const char *msgData, size_t dataLength)
+{
+	//size_t msgTypeLength = strlen(msgType);
+	
+	ostringstream buffer;
+	buffer << msgType << ":";
+	buffer.write(msgData, dataLength);
+	
+	sendMessage(buffer.str().c_str(), buffer.str().size());
+}
+
+

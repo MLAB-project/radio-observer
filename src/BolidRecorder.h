@@ -11,6 +11,8 @@
 
 
 #include "WaterfallBackend.h"
+#include "MessageDispatch.h"
+#include "BolidMessage.h"
 
 
 /**
