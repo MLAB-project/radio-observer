@@ -46,6 +46,10 @@
 						},
 					],
 				},
+				{
+					"key":     "webserver",
+					"factory": "webserver",
+				},
 			],
 		},
 	],

@@ -14,6 +14,7 @@ using namespace cppapp;
 
 #include "Frontend.h"
 #include "Backend.h"
+#include "WebServer.h"
 
 /**
  * \todo Write documentation for class Pipeline.
@@ -22,6 +23,8 @@ class Pipeline : public DIObject {
 private:
 	Ref<Frontend> frontend_;
 	Ref<Backend>  backend_;
+	
+	Ref<WebServer> webServer_;
 	
 	Pipeline(const Pipeline& other);
 	

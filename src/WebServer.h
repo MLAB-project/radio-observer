@@ -12,6 +12,7 @@
 #include <cppapp/cppapp.h>
 using namespace cppapp;
 
+#include "config.h"
 #include "mongoose.h"
 
 /**
@@ -30,6 +31,8 @@ private:
 	bool                          keepRunning_;
 	
 	int* threadWorker();
+	
+	static int eventHandler(struct mg_connection *conn, enum mg_event ev);
 
 public:
 	/**
@@ -43,7 +46,7 @@ public:
 	
 	void start();
 	void stop();
-	
+
 	virtual bool injectDependency(Ref<DIObject> obj, std::string key);
 	
 	static Ref<DIObject> make(Ref<DynObject> config, Ref<DIObject> parent);

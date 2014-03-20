@@ -73,6 +73,9 @@ Ref<Frontend> App::createFrontend()
 			config_->hasStrItem("jack_right_port")
 		);
 		
+		LOG_INFO("jack_left_port = " << config_->getStrString("jack_left_port", "system:capture_1").c_str());
+		LOG_INFO("jack_right_port = " << config_->getStrString("jack_right_port", "system:capture_2").c_str());
+		
 		return new JackFrontend(
 			connect,
 			config_->getStrString("jack_left_port", "system:capture_1").c_str(),
@@ -178,8 +181,6 @@ int App::onRun()
 	if (pipeline_->getFrontend().isNull())
 		pipeline_->setFrontend(createFrontend());
 	
-	webServer_ = new WebServer();
-	
 	//frontend_ = createFrontend();
 	//backend_  = createBackend();
 	
@@ -188,12 +189,9 @@ int App::onRun()
 	Signal::INT.install();
 	Signal::INT.pushMethod(this, &App::interruptHandler);
 	//frontend_->run();
-	webServer_->start();
 	pipeline_->run();
 	Signal::INT.pop();
 	Signal::INT.uninstall();
-	
-	webServer_->stop();
 	
 	// WAVStream stream(input_);
 	// //Ref<Backend> backend = new SimpleWaterfallBackend(output(), 0.2, 0.1);

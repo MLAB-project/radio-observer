@@ -98,13 +98,13 @@ void JackFrontend::run()
 	}
 	
 	if (connect_) {
-		if (jack_connect(client, leftInputName_, jack_port_name(leftPort_))) {
+		if (jack_connect(client, leftInputName_.c_str(), jack_port_name(leftPort_))) {
 			LOG_ERROR("Failed to connect left input port to \"" <<
 					leftInputName_ << "\"!");
 			return;
 		}
 		
-		if (jack_connect(client, rightInputName_, jack_port_name(rightPort_))) {
+		if (jack_connect(client, rightInputName_.c_str(), jack_port_name(rightPort_))) {
 			LOG_ERROR("Failed to connect right input port to \"" <<
 					rightInputName_ << "\"!");
 			return;

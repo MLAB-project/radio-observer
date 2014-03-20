@@ -11,7 +11,7 @@
 
 WebServer::WebServer()
 {
-	server_ = mg_create_server(NULL, NULL);
+	server_ = mg_create_server(NULL, &WebServer::eventHandler);
 	mg_set_option(server_, "document_root",  ".");
 	mg_set_option(server_, "listening_port", "8080");
 }
@@ -19,10 +19,9 @@ WebServer::WebServer()
 
 WebServer::~WebServer()
 {
+	LOG_INFO("WebServer::~WebServer()");
+	stop();
 	mg_destroy_server(&server_);
-
-	delete thread_;
-	thread_ = NULL;
 }
 
 
@@ -36,8 +35,11 @@ void WebServer::start()
 void WebServer::stop()
 {
 	keepRunning_ = false;
-	thread_->join();
-	thread_ = NULL;
+	if (thread_ != NULL) {
+		thread_->join();
+		delete thread_;
+		thread_ = NULL;
+	}
 }
 
 
@@ -51,6 +53,23 @@ int* WebServer::threadWorker()
 }
 
 
+int WebServer::eventHandler(struct mg_connection *conn, enum mg_event ev)
+{
+	switch (ev) {
+	case MG_AUTH: return MG_TRUE;
+	case MG_REQUEST:
+		mg_printf_data(conn, "<html>");
+		mg_printf_data(conn, "<body>");
+		mg_printf_data(conn, "<h1>%s</h1>", PACKAGE_STRING);
+		mg_printf_data(conn, "<p><a href=\"%s\">%s</a></p>", PACKAGE_URL, PACKAGE_URL);
+		mg_printf_data(conn, "</body>");
+		mg_printf_data(conn, "</html>");
+		return MG_TRUE;
+	default: return MG_FALSE;
+	}
+}
+
+
 bool WebServer::injectDependency(Ref<DIObject> obj, std::string key)
 {
 	return false;
@@ -59,7 +78,8 @@ bool WebServer::injectDependency(Ref<DIObject> obj, std::string key)
 
 Ref<DIObject> WebServer::make(Ref<DynObject> config, Ref<DIObject> parent)
 {
-	return new WebServer();
+	Ref<DIObject> webServer = new WebServer();
+	return webServer;
 }
 
 CPPAPP_DI_METHOD("webserver", WebServer, make);
