@@ -42,7 +42,7 @@ int JackFrontend::onJackInput(jack_nframes_t nframes, void *arg)
 				string *msg = self->midiQueue_.front();
 				self->midiQueue_.pop_front();
 				
-				LOG_INFO("JackFrontend: Sending MIDI message: " << msg);
+				LOG_INFO("JackFrontend: Sending MIDI message: " << *msg);
 				
 				unsigned char *buffer = jack_midi_event_reserve(
 					midiPortBuffer,
