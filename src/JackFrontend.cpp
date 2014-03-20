@@ -196,11 +196,11 @@ void BolidMessageListener::sendMessage(const BolidMessage &msg)
 	
 	size_t length = sprintf(
 		buffer,
-		"%d,%d,%f,%f,bolid: peak=%f mag=%f noise=%f",
-		msg.startSample,
-		msg.endSample,
+		"%f,%f,%d,%d,bolid: peak=%f mag=%f noise=%f",
 		msg.minFreq,
 		msg.maxFreq,
+		msg.startSample,
+		msg.endSample,
 		msg.peakFreq,
 		msg.magnitude,
 		msg.noise
