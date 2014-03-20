@@ -17,21 +17,28 @@
  * \todo Write documentation for class BolidMessage.
  */
 struct BolidMessage {
-	int minFreq;
-	int maxFreq;
+	float minFreq;
+	float maxFreq;
 	
 	int startSample;
 	int endSample;
 	
+	float peakFreq;
+	float magnitude;
+	float noise;
+	
 	BolidMessage() :
 		minFreq(0), maxFreq(0),
-		startSample(0), endSample(0)
+		startSample(0), endSample(0),
+		peakFreq(0), magnitude(0), noise(0)
 	{
 	}
 	
-	BolidMessage(int minFreq, int maxFreq, int startSample, int endSample) :
+	BolidMessage(float minFreq, float maxFreq, int startSample, int endSample,
+			   float peakFreq, float magnitude, float noise) :
 		minFreq(minFreq), maxFreq(maxFreq),
-		startSample(startSample), endSample(endSample)
+		startSample(startSample), endSample(endSample),
+		peakFreq(peakFreq), magnitude(magnitude), noise(noise)
 	{
 	}
 };

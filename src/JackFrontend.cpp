@@ -182,12 +182,14 @@ void BolidMessageListener::sendMessage(const BolidMessage &msg)
 	
 	size_t length = sprintf(
 		buffer,
-		"mlab.radio_event.bolid:%d,%d,%d,%d,%s",
-		msg.minFreq,
-		msg.maxFreq,
+		"mlab.radio_event.meteor_echo:%d,%d,%f,%f,peak=%f mag=%f noise=%f",
 		msg.startSample,
 		msg.endSample,
-		""
+		msg.minFreq,
+		msg.maxFreq,
+		msg.peakFreq,
+		msg.magnitude,
+		msg.noise
 	);
 	
 	frontend_->sendMidiMessage(buffer, length);

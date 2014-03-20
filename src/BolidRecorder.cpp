@@ -158,7 +158,11 @@ void BolidRecorder::update()
 					peakFreq_ - (maxDetectFq_ - minDetectFq_) / 4,
 					peakFreq_ + (maxDetectFq_ - minDetectFq_) / 4,
 					nextSnapshot_.start,
-					nextSnapshot_.start + nextSnapshot_.length
+					nextSnapshot_.start + nextSnapshot_.length,
+					
+					peakFreq_,
+					magnitude_,
+					noise_
 				));
 				
 				LOG_WARNING("************** METEOR DETECTED **************");
