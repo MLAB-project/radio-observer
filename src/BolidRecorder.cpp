@@ -157,8 +157,10 @@ void BolidRecorder::update()
 				MessageDispatch<BolidMessage>::getInstance().sendMessage(BolidMessage(
 					peakFreq_ - (maxDetectFq_ - minDetectFq_) / 4,
 					peakFreq_ + (maxDetectFq_ - minDetectFq_) / 4,
-					nextSnapshot_.start,
-					nextSnapshot_.start + nextSnapshot_.length,
+					//nextSnapshot_.start,
+					//nextSnapshot_.start + nextSnapshot_.length,
+					0,
+					nextSnapshot_.length,
 					
 					peakFreq_,
 					magnitude_,
