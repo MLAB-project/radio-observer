@@ -160,7 +160,7 @@ void BolidRecorder::update()
 					//nextSnapshot_.start,
 					//nextSnapshot_.start + nextSnapshot_.length,
 					0,
-					nextSnapshot_.length,
+					fftSamplesToRaw(nextSnapshot_.length),
 					
 					peakFreq_,
 					magnitude_,
