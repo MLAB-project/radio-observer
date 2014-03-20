@@ -34,6 +34,7 @@ int JackFrontend::onJackInput(jack_nframes_t nframes, void *arg)
 	self->process(self->outputBuffer_);
 	
 	void *midiPortBuffer = jack_port_get_buffer(self->midiPort_, nframes);
+	jack_midi_clear_buffer(midiPortBuffer);
 	
 	if (self->midiMessageWaiting_) {
 		if (self->midiMutex_.tryLock()) {
