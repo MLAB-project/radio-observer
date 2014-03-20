@@ -15,6 +15,7 @@
 #include "BolidMessage.h"
 
 #include <string>
+#include <deque>
 using namespace std;
 
 #include <cppapp/cppapp.h>
@@ -47,7 +48,7 @@ private:
 	vector<Complex> outputBuffer_;
 	
 	jack_port_t     *midiPort_;
-	vector<string*>  midiQueue_;
+	deque<string*>   midiQueue_;
 	bool             midiMessageWaiting_;
 	Mutex            midiMutex_;
 

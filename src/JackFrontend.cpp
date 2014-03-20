@@ -38,9 +38,9 @@ int JackFrontend::onJackInput(jack_nframes_t nframes, void *arg)
 	
 	if (self->midiMessageWaiting_) {
 		if (self->midiMutex_.tryLock()) {
-			for (size_t i = 0; i < self->midiQueue_.size(); i++) {
-				string *msg = self->midiQueue_[i];
-				self->midiQueue_[i] = NULL;
+			if (self->midiQueue_.size() > 0) {
+				string *msg = self->midiQueue_.front();
+				self->midiQueue_.pop_front();
 				
 				unsigned char *buffer = jack_midi_event_reserve(
 					midiPortBuffer,
@@ -54,8 +54,7 @@ int JackFrontend::onJackInput(jack_nframes_t nframes, void *arg)
 				
 				delete msg;
 			}
-			self->midiQueue_.clear();
-			self->midiMessageWaiting_ = false;
+			self->midiMessageWaiting_ = (self->midiQueue_.size() > 0);
 			self->midiMutex_.unlock();
 		}
 	}
@@ -181,9 +180,21 @@ void BolidMessageListener::sendMessage(const BolidMessage &msg)
 {
 	char buffer[1024];
 	
+	//size_t length = sprintf(
+	//	buffer,
+	//	"mlab.radio_event.meteor_echo:%d,%d,%f,%f,peak=%f mag=%f noise=%f",
+	//	msg.startSample,
+	//	msg.endSample,
+	//	msg.minFreq,
+	//	msg.maxFreq,
+	//	msg.peakFreq,
+	//	msg.magnitude,
+	//	msg.noise
+	//);
+	
 	size_t length = sprintf(
 		buffer,
-		"mlab.radio_event.meteor_echo:%d,%d,%f,%f,peak=%f mag=%f noise=%f",
+		"%d,%d,%f,%f,bolid: peak=%f mag=%f noise=%f",
 		msg.startSample,
 		msg.endSample,
 		msg.minFreq,
