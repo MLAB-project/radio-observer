@@ -7,6 +7,14 @@
  */
 
 #include "Pipeline.h"
+#include "App.h"
+
+
+void Pipeline::setApp(Ref<App> app)
+{
+	if (webServer_.isNotNull())
+		webServer_->setApp(app);
+}
 
 
 void Pipeline::run()

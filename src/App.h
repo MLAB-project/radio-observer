@@ -51,6 +51,8 @@ protected:
 public:
 	App();
 	virtual ~App();
+	
+	Ref<DynObject> getConfig() { return config_; }
 };
 
 

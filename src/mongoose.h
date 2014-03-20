@@ -55,6 +55,8 @@ struct mg_connection {
   int wsbits;                 // First byte of the websocket frame
   void *server_param;         // Parameter passed to mg_add_uri_handler()
   void *connection_param;     // Placeholder for connection-specific data
+
+  void *user_data;            // Server-specific user data
 };
 
 struct mg_server; // Opaque structure describing server instance
@@ -75,6 +77,7 @@ typedef int (*mg_handler_t)(struct mg_connection *, enum mg_event);
 struct mg_server *mg_create_server(void *server_param, mg_handler_t handler);
 void mg_destroy_server(struct mg_server **);
 const char *mg_set_option(struct mg_server *, const char *opt, const char *val);
+void mg_set_user_data(struct mg_server *, void *user_data);
 int mg_poll_server(struct mg_server *, int milliseconds);
 const char **mg_get_valid_option_names(void);
 const char *mg_get_option(const struct mg_server *server, const char *name);

@@ -16,6 +16,10 @@ using namespace cppapp;
 #include "Backend.h"
 #include "WebServer.h"
 
+
+class App;
+
+
 /**
  * \todo Write documentation for class Pipeline.
  */
@@ -37,6 +41,8 @@ public:
 	 * Destructor.
 	 */
 	virtual ~Pipeline() {}
+	
+	void setApp(Ref<App> app);
 	
 	Ref<Frontend> getFrontend() { return frontend_; }
 	void setFrontend(Ref<Frontend> frontend) { frontend_ = frontend; }

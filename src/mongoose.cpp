@@ -1159,6 +1159,8 @@ struct mg_server {
   mg_handler_t event_handler;
   char *config_options[NUM_OPTIONS];
   char local_ip[48];
+
+  void *user_data;
 };
 
 // Local endpoint representation
@@ -4821,5 +4823,11 @@ struct mg_server *mg_create_server(void *server_data, mg_handler_t handler) {
   ns_server_init(&server->ns_server, server_data, mg_ev_handler);
   set_default_option_values(server->config_options);
   server->event_handler = handler;
+  server->user_data = NULL;
   return server;
 }
+
+void mg_set_user_data(struct mg_server *server, void *user_data) {
+	server->user_data = user_data;
+}
+
