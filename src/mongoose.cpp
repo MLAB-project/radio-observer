@@ -4128,6 +4128,8 @@ static void open_local_endpoint(struct connection *conn, int skip_user) {
 #endif
 #endif
 
+  conn->mg_conn.user_data = conn->server->user_data;
+
   // If EP_USER was set in a prev call, reset it
   conn->endpoint_type = EP_NONE;
 
@@ -4359,6 +4361,7 @@ struct mg_connection *mg_connect(struct mg_server *server, const char *host,
   conn->endpoint_type = EP_CLIENT;
   //conn->handler = handler;
   conn->mg_conn.server_param = server->ns_server.server_data;
+  conn->mg_conn.user_data = server->user_data;
   conn->ns_conn->flags = NSF_CONNECTING;
 
   return &conn->mg_conn;

@@ -16,6 +16,8 @@ WebServer::WebServer()
 	mg_set_user_data(server_, this);
 	mg_set_option(server_, "document_root",  ".");
 	mg_set_option(server_, "listening_port", "8080");
+
+	MessageDispatch<BolidMessage>::getInstance().addListener(new BolidMessageListener(this));
 }
 
 
@@ -86,7 +88,11 @@ int WebServer::eventHandler(struct mg_connection *conn, enum mg_event ev)
 	switch (ev) {
 	case MG_AUTH: return MG_TRUE;
 	case MG_REQUEST:
-		srv->respondMainPage(conn);
+		if (srv == NULL) {
+			mg_printf_data(conn, "<b>ERROR: Server not configured.</b>");
+		} else {
+			srv->respondMainPage(conn);
+		}
 		return MG_TRUE;
 	default: return MG_FALSE;
 	}
@@ -101,15 +107,45 @@ void WebServer::respondMainPage(struct mg_connection *conn)
 	mg_printf_data(conn, "<h1>%s</h1>", PACKAGE_STRING);
 	mg_printf_data(conn, "<p><a href=\"%s\">%s</a></p>", PACKAGE_URL, PACKAGE_URL);
 	
-	if (pipeline_.isNotNull()) {
-		Ref<WaterfallBackend> wb = pipeline_->getFrontend().as<WaterfallBackend>();
-		
-		mg_printf_data(conn, "<h2>Waterfall Backend</h2>");
-		mg_printf_data(conn, "<p>Origin: %s</p>", wb->getOrigin().c_str());
+	mg_printf_data(conn, "<table>");
+	FOR_EACH(bolids_, it) {
+		mg_printf_data(conn, "<tr><td>%d</td><td>%f.1</td></tr>", it->endSample - it->startSample, it->peakFreq);
 	}
+	mg_printf_data(conn, "</table>");
+	
+	printSystemInfo(conn);
 	
 	mg_printf_data(conn, "</body>");
 	mg_printf_data(conn, "</html>");
+}
+
+
+void WebServer::printSystemInfo(struct mg_connection *conn)
+{
+	time_t timer = time(NULL);
+	
+	Ref<WaterfallBackend> wb = NULL;
+	if (pipeline_.isNotNull()) {
+		wb = pipeline_->getBackend().as<WaterfallBackend>();
+	}
+	
+	mg_printf_data(
+		conn,
+		"<table border=\"1\">"
+		"<tr><th colspan=\"2\">System Info</th></tr>"
+		"<tr><th>System time</th><td>%s</td></tr>"
+		"<tr><th>Radio-Observer version</th><td>%s</td></tr>",
+		ctime(&timer),
+		PACKAGE_VERSION
+	);
+	if (wb.isNotNull()) {
+		mg_printf_data(
+			conn,
+			"<tr><th>Station name</th><td>%s</td></tr>",
+			wb->getOrigin().c_str()
+		);
+	}
+	mg_printf_data(conn, "</table>");
 }
 
 
@@ -131,7 +167,7 @@ CPPAPP_DI_METHOD("webserver", WebServer, make);
 
 void WebServer::BolidMessageListener::sendMessage(const BolidMessage &msg)
 {
-	
+	webServer_->bolids_.push_back(msg);
 }
 
 

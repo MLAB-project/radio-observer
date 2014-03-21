@@ -9,6 +9,10 @@
 #ifndef WEBSERVER_XIYC92MT
 #define WEBSERVER_XIYC92MT
 
+#include <deque>
+#include <ctime>
+using namespace std;
+
 #include <cppapp/cppapp.h>
 using namespace cppapp;
 
@@ -40,11 +44,15 @@ private:
 	MethodThread<int, WebServer> *thread_;
 	bool                          keepRunning_;
 	
+	deque<BolidMessage> bolids_;
+	
 	int* threadWorker();
 	
 	static int eventHandler(struct mg_connection *conn, enum mg_event ev);
 	
 	void respondMainPage(struct mg_connection *conn);
+	
+	void printSystemInfo(struct mg_connection *conn);
 
 public:
 	/**
@@ -74,6 +82,9 @@ public:
 		Ref<WebServer> webServer_;
 	
 	public:
+		BolidMessageListener(Ref<WebServer> server) : webServer_(server) {}
+		virtual ~BolidMessageListener() {}
+		
 		virtual void sendMessage(const BolidMessage &msg);
 	};
 };
