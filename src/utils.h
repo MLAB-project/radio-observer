@@ -16,6 +16,9 @@ using namespace std;
 #include <cppapp/cppapp.h>
 
 
+int wrap(int value, int size);
+
+
 #ifdef NDEBUG
 #	define safeAdd(a, b) ((a) + (b))
 #	define safeMul(a, b) ((a) * (b))

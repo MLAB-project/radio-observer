@@ -106,13 +106,15 @@ int Recorder::getFFTSampleRate()
 
 int Recorder::fftMarkToRaw(int mark)
 {
-	return rawHandles_->at(mark).mark;
+	int wrapped = wrap(mark, rawHandles_->size());
+	return rawHandles_->at(wrapped).mark;
 }
 
 
 WFTime Recorder::fftMarkToTime(int mark)
 {
-	return rawHandles_->at(mark).time;
+	int wrapped = wrap(mark, rawHandles_->size());
+	return rawHandles_->at(wrapped).time;
 }
 
 
