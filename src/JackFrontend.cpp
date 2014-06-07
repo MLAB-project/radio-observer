@@ -182,25 +182,13 @@ void BolidMessageListener::sendMessage(const BolidMessage &msg)
 {
 	char buffer[1024];
 	
-	//size_t length = sprintf(
-	//	buffer,
-	//	"mlab.radio_event.meteor_echo:%d,%d,%f,%f,peak=%f mag=%f noise=%f",
-	//	msg.startSample,
-	//	msg.endSample,
-	//	msg.minFreq,
-	//	msg.maxFreq,
-	//	msg.peakFreq,
-	//	msg.magnitude,
-	//	msg.noise
-	//);
-	
 	size_t length = sprintf(
 		buffer,
-		"%f,%f,%d,%d,bolid: peak=%f mag=%f noise=%f",
+		"mlab.aabb_event.meteor_echo:%d,%d,%f,%f,peak=%f mag=%f noise=%f",
+		-msg.endSample,
+		0,
 		msg.minFreq,
 		msg.maxFreq,
-		msg.startSample,
-		msg.endSample,
 		msg.peakFreq,
 		msg.magnitude,
 		msg.noise
