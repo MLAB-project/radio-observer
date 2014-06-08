@@ -283,6 +283,9 @@ protected:
 		inline int end() const { return start + length; }
 	};
 	
+	string outputDir_; ///< Directory to store the resulting snapshot files in.
+	string outputType_; ///< Short string identifying the type of the output (snapshots/bolids).
+	
 	int   snapshotLength_;
 	float leftFrequency_;
 	float rightFrequency_;
@@ -306,8 +309,12 @@ public:
 	SnapshotRecorder(Ref<WaterfallBackend>  backend,
 				  int                    snapshotLength,
 				  float                  leftFrequency,
-				  float                  rightFrequency) :
+				  float                  rightFrequency,
+				  string                 outputDir,
+				  string                 outputType) :
 		Recorder(backend),
+		outputDir_(outputDir),
+		outputType_(outputType),
 		snapshotLength_(snapshotLength),
 		leftFrequency_(leftFrequency),
 		rightFrequency_(rightFrequency),

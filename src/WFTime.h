@@ -84,13 +84,11 @@ public:
 	
 	inline WFTime addSamples(int sampleCount, int sampleRate)
 	{
+		assert(sampleCount > 0);
+		
 		long microseconds = (((double)sampleCount / (double)sampleRate) *
 						 (double)US_IN_SECOND);
 		return addMicroseconds(microseconds);
-		//return WFTime(
-		//	microseconds / US_IN_SECOND,
-		//	microseconds % US_IN_SECOND
-		//);
 	}
 	
 	//inline WFTime subSamples(int sampleCount, int sampleRate)

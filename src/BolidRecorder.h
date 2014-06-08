@@ -109,6 +109,8 @@ public:
 			    int                    snapshotLength,
 			    float                  leftFrequency,
 			    float                  rightFrequency,
+			    string                 outputDir,
+			    string                 outputType,
 			    float                  minDetectionFq,
 			    float                  maxDetectionFq,
 			    float                  minNoiseFq,
@@ -118,7 +120,7 @@ public:
 			    float                  averageFreqRange,
 			    float                  threshold,
 			    string                 metadataPath) :
-		SnapshotRecorder(backend, snapshotLength, leftFrequency, rightFrequency),
+		SnapshotRecorder(backend, snapshotLength, leftFrequency, rightFrequency, outputDir, outputType),
 		minNoiseFq_(minNoiseFq),
 		maxNoiseFq_(maxNoiseFq),
 		lowNoiseBin_(0),
@@ -155,7 +157,6 @@ public:
 	 */
 	virtual ~BolidRecorder() {}
 	
-	virtual string getFileName(WFTime time);
 	virtual string getMetadataFileName(WFTime time);
 	
 	virtual void start();

@@ -303,9 +303,8 @@ void SnapshotRecorder::writeRaw(Snapshot snapshot)
 
 string SnapshotRecorder::getFileName(WFTime time)
 {
-	string typ("snap");
 	string origin = backend_->getOrigin();
-	return getFileName(typ, origin, time);
+	return getFileName(outputType_, origin, time);
 }
 
 
@@ -321,12 +320,15 @@ string SnapshotRecorder::getFileName(const string &typ,
 							  WFTime       time)
 {
 	char fileName[1024];
-	sprintf(fileName, "!%s_%s_%s%03d.fits",
-		   typ.c_str(),
-		   origin.c_str(),
+	sprintf(fileName, "!%s%03d_%s_%s.fits",
 		   time.format("%Y%m%d%H%M%S").c_str(),
-		   (int)(time.microseconds() / 1000));
-	return string(fileName);
+		   (int)(time.microseconds() / 1000),
+		   origin.c_str(),
+		   typ.c_str());
+	return Path::join(
+		outputDir_,
+		string(fileName)
+	);
 }
 
 
@@ -336,13 +338,16 @@ string SnapshotRecorder::getFileBasename(const char   *typ,
                                          WFTime        time)
 {
 	char fileName[1024];
-	sprintf(fileName, "!%s_%s_%s%03d.%s",
-		   typ,
-		   origin.c_str(),
+	sprintf(fileName, "!%s%03d_%s_%s.%s",
 		   time.format("%Y%m%d%H%M%S").c_str(),
 		   (int)(time.microseconds() / 1000),
+		   origin.c_str(),
+		   typ,
 		   ext);
-	return string(fileName);
+	return Path::join(
+		outputDir_,
+		string(fileName)
+	);
 }
 
 
@@ -442,15 +447,20 @@ void SnapshotRecorder::update()
  */
 Ref<DIObject> SnapshotRecorder::make(Ref<DynObject> config, Ref<DIObject> parent)
 {
-	int   snapshotLength = config->getStrInt("snapshot_length", 60);
-	float leftFrequency  = config->getStrDouble("low_freq", 0);
-	float rightFrequency = config->getStrDouble("hi_freq",  0);
+	string outputDir      = config->getStrString("output_dir", ".");
+	string outputType     = config->getStrString("output_type", "snap");
+	
+	int    snapshotLength = config->getStrInt("snapshot_length", 60);
+	float  leftFrequency  = config->getStrDouble("low_freq", 0);
+	float  rightFrequency = config->getStrDouble("hi_freq",  0);
 	
 	return new SnapshotRecorder(
 		parent,
 		snapshotLength,
 		leftFrequency,
-		rightFrequency
+		rightFrequency,
+		outputDir,
+		outputType
 	);
 }
 

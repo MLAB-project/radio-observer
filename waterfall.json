@@ -27,6 +27,9 @@
 						{
 							"key":     "recorder",
 							"factory": "snapshot",
+
+							// "output_dir": ".",
+							// "output_type": "snap",
 							
 							"snapshot_length": 60,
 							"low_freq":         0,
@@ -35,6 +38,9 @@
 						{
 							"key":     "recorder",
 							"factory": "bolid",
+							
+							// "output_dir": ".",
+							// "output_type": "snap",
 							
 							"snapshot_length":    60,
 							"low_freq":         9000,

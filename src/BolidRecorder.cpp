@@ -34,18 +34,14 @@ float BolidRecorder::average(float fromFq, float toFq)
 }
 
 
-string BolidRecorder::getFileName(WFTime time)
-{
-	string typ("blid");
-	string origin = backend_->getOrigin();
-	return SnapshotRecorder::getFileName(typ, origin, time);
-}
-
-
 string BolidRecorder::getMetadataFileName(WFTime time)
 {
 	ostringstream ss;
-	ss << "meta_" << backend_->getOrigin() << "_" << time.getHour().format("%Y%m%d%H%M%S") << ".csv";
+	ss <<
+		time.getHour().format("%Y%m%d%H%M%S") <<
+		"_" <<
+		backend_->getOrigin() <<
+		"_meta.csv";
 	
 	return Path::join(
 		metadataPath_,
@@ -270,9 +266,12 @@ float BolidRecorder::average(float *buffer, int length)
  */
 Ref<DIObject> BolidRecorder::make(Ref<DynObject> config, Ref<DIObject> parent)
 {
-	int   snapshotLength = config->getStrInt("snapshot_length",    60);
-	float leftFrequency  = config->getStrDouble("low_freq",      9000);
-	float rightFrequency = config->getStrDouble("hi_freq",      12000);
+	string outputDir      = config->getStrString("output_dir", ".");
+	string outputType     = config->getStrString("output_type", "blid");
+	
+	int    snapshotLength = config->getStrInt("snapshot_length",    60);
+	float  leftFrequency  = config->getStrDouble("low_freq",      9000);
+	float  rightFrequency = config->getStrDouble("hi_freq",      12000);
 	
 	float minDetectFq = config->getStrDouble("low_detect_freq", 10000);
 	float maxDetectFq = config->getStrDouble("hi_detect_freq",  10900);
@@ -292,6 +291,9 @@ Ref<DIObject> BolidRecorder::make(Ref<DynObject> config, Ref<DIObject> parent)
 		snapshotLength,
 		leftFrequency,
 		rightFrequency,
+		
+		outputDir,
+		outputType,
 		
 		minDetectFq,
 		maxDetectFq,
