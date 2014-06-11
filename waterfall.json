@@ -41,6 +41,7 @@
 							
 							// "output_dir": ".",
 							// "output_type": "snap",
+							// "metadata_path": ".",
 							
 							"snapshot_length":    60,
 							"low_freq":         9000,

@@ -149,6 +149,7 @@ void BolidRecorder::update()
 					<< "\t" << magnitude_
 					<< "\t" << noise_
 					<< std::endl;
+				metaf->getStream()->flush();
 				
 				MessageDispatch<BolidMessage>::getInstance().sendMessage(BolidMessage(
 					peakFreq_ - (maxDetectFq_ - minDetectFq_) / 4,

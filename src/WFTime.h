@@ -84,7 +84,7 @@ public:
 	
 	inline WFTime addSamples(int sampleCount, int sampleRate)
 	{
-		assert(sampleCount > 0);
+		assert(sampleCount >= 0);
 		
 		long microseconds = (((double)sampleCount / (double)sampleRate) *
 						 (double)US_IN_SECOND);
