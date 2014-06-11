@@ -4,7 +4,7 @@
 
 
 BIN_NAME     = radio-observer
-VERSION      = 0.2dev
+VERSION      = 0.2
 # yes / no
 IS_LIBRARY   = no
 
