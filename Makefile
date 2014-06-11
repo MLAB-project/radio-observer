@@ -3,7 +3,7 @@
 #
 
 
-BIN_NAME     = waterfall
+BIN_NAME     = radio-observer
 VERSION      = 0.2dev
 # yes / no
 IS_LIBRARY   = no

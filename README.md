@@ -1,5 +1,5 @@
-waterfall
-=========
+radio-observer
+==============
 
 This README is for version `0.2dev`.
 
@@ -44,19 +44,19 @@ Configuration
 -------------
 
 The program attempts to read a config file in the user's home directory called
-`.waterfall`. Example config file is stored in `waterfall/watefall.cfg`. You
-can copy it to your home directory and edit as you like (`$ mv waterfall.cfg
-$HOME/.waterfall`).
+`.radio-observer.json`. Example config file is stored in
+`radio-observer/radio-observer.json`. You can copy it to your home directory
+and edit as you like (`$ mv radio-observer.json $HOME/.radio-observer.json`).
 
 
 Usage
 -----
 
-    $ waterfall [WAV_FILE]
+    $ radio-observer [WAV_FILE]
 
-Without the `WAV_FILE` argument, `waterfall` attempts to connect to a jack
+Without the `WAV_FILE` argument, `radio-observer` attempts to connect to a jack
 server and then listen forever to the data sent by Jack. If `WAV_FILE` is
-specifed, `waterfall` uses WAV frontend, reads the WAV file and exits.  In
+specifed, `radio-observer` uses WAV frontend, reads the WAV file and exits.  In
 either case, the program stores the resulting data in a series of FITS files
 (snapshots) in its current working directory (the directory from which you run
 the program).
@@ -68,7 +68,7 @@ two-digit month, `DD` two-digit day and so on.
 
 Despite there being a `log_file` configuration option, the log is currently
 written only to the stderr.  To append it to a file, do output redirection (`$
-waterfall 2> your_log_file.log`).
+radio-observer 2> your_log_file.log`).
 
 Fits file handling: FITS can be converted in png by fits2png script. 
 `sudo apt-get install python-pyfits`
