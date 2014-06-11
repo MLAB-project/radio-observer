@@ -193,13 +193,15 @@ void SnapshotRecorder::write(Snapshot snapshot)
 	
 	float fftSampleRate = backend_->getFFTSampleRate();
 	
-	string fileName = getFileName(time);
+	string fileName = "!";
+	fileName += getFileName(time);
 	
 	LOG_INFO("Writing snapshot \"" << (fileName.c_str() + 1) << "\"...");
 	
 	FITSWriter w;
 	
-	fileName = fileName + "[compress]";
+	if (compressOutput_)
+		fileName = fileName + "[compress]";
 	if (!w.open(fileName.c_str()))
 		return;
 	
@@ -257,7 +259,8 @@ void SnapshotRecorder::writeRaw(Snapshot snapshot)
 	
 	float fftSampleRate = backend_->getFFTSampleRate();
 	
-	string fileName = getFileName("raws", "fits", time);
+	string fileName = "!";
+	fileName += getFileName("raws", "fits", time);
 	
 	LOG_INFO("Writing raw snapshot \"" << (fileName.c_str() + 1) << "\"...");
 	
@@ -319,16 +322,18 @@ string SnapshotRecorder::getFileName(const string &typ,
 							  const string &origin,
 							  WFTime       time)
 {
-	char fileName[1024];
-	sprintf(fileName, "!%s%03d_%s_%s.fits",
-		   time.format("%Y%m%d%H%M%S").c_str(),
-		   (int)(time.microseconds() / 1000),
-		   origin.c_str(),
-		   typ.c_str());
-	return Path::join(
-		outputDir_,
-		string(fileName)
-	);
+	return getFileBasename(typ.c_str(), "fits", origin, time);
+
+	//char fileName[1024];
+	//sprintf(fileName, "%s%03d_%s_%s.fits",
+	//	   time.format("%Y%m%d%H%M%S").c_str(),
+	//	   (int)(time.microseconds() / 1000),
+	//	   origin.c_str(),
+	//	   typ.c_str());
+	//return Path::join(
+	//	outputDir_,
+	//	string(fileName)
+	//);
 }
 
 
@@ -338,7 +343,7 @@ string SnapshotRecorder::getFileBasename(const char   *typ,
                                          WFTime        time)
 {
 	char fileName[1024];
-	sprintf(fileName, "!%s%03d_%s_%s.%s",
+	sprintf(fileName, "%s%03d_%s_%s.%s",
 		   time.format("%Y%m%d%H%M%S").c_str(),
 		   (int)(time.microseconds() / 1000),
 		   origin.c_str(),
@@ -449,6 +454,7 @@ Ref<DIObject> SnapshotRecorder::make(Ref<DynObject> config, Ref<DIObject> parent
 {
 	string outputDir      = config->getStrString("output_dir", ".");
 	string outputType     = config->getStrString("output_type", "snap");
+	bool   compressOutput = config->getStrBool("compress_output", true);
 	
 	int    snapshotLength = config->getStrInt("snapshot_length", 60);
 	float  leftFrequency  = config->getStrDouble("low_freq", 0);
@@ -460,7 +466,8 @@ Ref<DIObject> SnapshotRecorder::make(Ref<DynObject> config, Ref<DIObject> parent
 		leftFrequency,
 		rightFrequency,
 		outputDir,
-		outputType
+		outputType,
+		compressOutput
 	);
 }
 

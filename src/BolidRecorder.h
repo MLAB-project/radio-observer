@@ -111,6 +111,7 @@ public:
 			    float                  rightFrequency,
 			    string                 outputDir,
 			    string                 outputType,
+			    bool                   compressOutput,
 			    float                  minDetectionFq,
 			    float                  maxDetectionFq,
 			    float                  minNoiseFq,
@@ -120,7 +121,7 @@ public:
 			    float                  averageFreqRange,
 			    float                  threshold,
 			    string                 metadataPath) :
-		SnapshotRecorder(backend, snapshotLength, leftFrequency, rightFrequency, outputDir, outputType),
+		SnapshotRecorder(backend, snapshotLength, leftFrequency, rightFrequency, outputDir, outputType, compressOutput),
 		minNoiseFq_(minNoiseFq),
 		maxNoiseFq_(maxNoiseFq),
 		lowNoiseBin_(0),

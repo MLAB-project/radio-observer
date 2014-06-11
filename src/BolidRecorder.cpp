@@ -269,6 +269,7 @@ Ref<DIObject> BolidRecorder::make(Ref<DynObject> config, Ref<DIObject> parent)
 {
 	string outputDir      = config->getStrString("output_dir", ".");
 	string outputType     = config->getStrString("output_type", "blid");
+	bool   compressOutput = config->getStrBool("compress_output", true);
 	
 	int    snapshotLength = config->getStrInt("snapshot_length",    60);
 	float  leftFrequency  = config->getStrDouble("low_freq",      9000);
@@ -295,6 +296,7 @@ Ref<DIObject> BolidRecorder::make(Ref<DynObject> config, Ref<DIObject> parent)
 		
 		outputDir,
 		outputType,
+		compressOutput,
 		
 		minDetectFq,
 		maxDetectFq,
