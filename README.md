@@ -1,7 +1,7 @@
 radio-observer
 ==============
 
-This README is for version `0.2dev`.
+This README is for version `0.3dev`.
 
 Radioastronomy utility. For more information, see [the MLAB wiki](http://wiki.mlab.cz/doku.php?id=en:programming_tasks#open-source_meteor_detection_toolkit).
 
