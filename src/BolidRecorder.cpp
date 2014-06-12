@@ -118,6 +118,7 @@ void BolidRecorder::update()
 			duration_ = 1;
 			nextSnapshot_.start = buffer_->mark() - advance_;
 			nextSnapshot_.length = 2 * advance_;
+			nextSnapshot_.fileName = getFileName(nextSnapshot_.start);
 			state_ = STATE_BOLID;
 		}
 		break;
@@ -143,11 +144,12 @@ void BolidRecorder::update()
 				Ref<Output> metaf = getMetadataFile(t);
 				float duration = (float)(nextSnapshot_.length - 2 * advance_) / (float)backend_->getFFTSampleRate();
 				(*metaf->getStream())
-					<< metaf->getName()
-					<< "\t" << duration
-					<< "\t" << peakFreq_
-					<< "\t" << magnitude_
-					<< "\t" << noise_
+					<< nextSnapshot_.fileName
+					//<< metaf->getName()
+					<< ";" << noise_
+					<< ";" << peakFreq_
+					<< ";" << magnitude_
+					<< ";" << duration
 					<< std::endl;
 				metaf->getStream()->flush();
 				
