@@ -40,7 +40,7 @@
 							"factory": "bolid",
 							
 							// "output_dir": ".",
-							// "output_type": "snap",
+							// "output_type": "blid",
 							// "metadata_path": ".",
 							
 							"snapshot_length":    60,
