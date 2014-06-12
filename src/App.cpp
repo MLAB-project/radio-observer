@@ -43,9 +43,9 @@ void App::readConfig()
 		exit(1);
 	}
 	
-	Ref<PrettyPrinter> printer = new PrettyPrinter();
-	config_->print(printer);
-	printer->print("\n");
+	//Ref<PrettyPrinter> printer = new PrettyPrinter();
+	//config_->print(printer);
+	//printer->print("\n");
 	
 	// Override the configuration read from the file by the command line
 	// options.
@@ -135,6 +135,10 @@ void App::setUp()
 {
 	AppBase::setUp();
 	
+	options().add('v',
+			    "",
+			    "Show program version.");
+	
 	//Logger::clearConfig();
 	//Logger::addOutput(LOG_LVL_DEBUG, "waterfall.log");
 }
@@ -165,6 +169,12 @@ int App::onRun()
 	// TODO: Implement better handling of missing config file.
 	if (config_.isNull())
 		return 1;
+	
+	if (options().get('v')) {
+		cout << PACKAGE_STRING << endl;
+		cout << PACKAGE_URL << endl;
+		return EXIT_SUCCESS;
+	}	
 	
 	string cfgName = config_->getStrString("configuration", "default");
 	Injector::getInstance().makePlans(config_->getStrItem("configurations"));

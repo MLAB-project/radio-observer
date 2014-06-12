@@ -15,7 +15,7 @@
 
 using namespace cppapp;
 
-// TODO: Remove later.
+#include "config.h"
 #include "Pipeline.h"
 #include "WAVStream.h"
 #include "JackFrontend.h"
