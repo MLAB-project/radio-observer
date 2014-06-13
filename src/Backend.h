@@ -20,11 +20,6 @@ using namespace cppapp;
 #include "WFTime.h"
 
 
-typedef double SampleType;
-typedef long   SampleCount;
-typedef int    SampleRate;
-
-
 /**
  * \brief Complex number.
  */
@@ -69,10 +64,10 @@ struct StreamInfo {
  */
 struct DataInfo {
 	/// Position of the first sample of the batch from the beginning of the stream.
-	long   offset;
+	SampleCount offset;
 	
 	/// Time offset of the first sample of the batch relative to the stream time offset.
-	WFTime timeOffset;
+	WFTime      timeOffset;
 	
 	DataInfo()
 	{
