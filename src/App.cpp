@@ -75,6 +75,7 @@ Ref<Frontend> App::createFrontend()
 		
 		return new JackFrontend(
 			connect,
+			pathBasename(options().getExecutable()).c_str(),
 			config_->getStrString("jack_left_port", "system:capture_1").c_str(),
 			config_->getStrString("jack_right_port", "system:capture_2").c_str()
 			
@@ -116,6 +117,8 @@ Ref<Frontend> App::createFrontend()
 //	
 //	if (config()->get("detect_bolids", "true")->asBool()) {
 //		backend->addRecorder(new BolidRecorder(
+//			backend,
+//			backend,
 //			backend,
 //			config()->get("waterfall_snapshot_length",     "1")->asFloat(),
 //			config()->get("bolid_left_freq",            "9000")->asFloat(),
@@ -238,5 +241,3 @@ App::App() :
 App::~App()
 {
 }
-
-

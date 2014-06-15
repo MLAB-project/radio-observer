@@ -77,8 +77,7 @@ void JackFrontend::run()
 {
 	jack_options_t options = JackNullOption;
 	jack_status_t  status;
-	const char *client_name = "waterfall";
-	jack_client_t *client = jack_client_open(client_name,
+	jack_client_t *client = jack_client_open(clientName_,
 									 options,
 									 &status,
 									 /* server name */ NULL);
@@ -93,8 +92,8 @@ void JackFrontend::run()
 	}
 	
 	if (status & JackNameNotUnique) {
-		client_name = jack_get_client_name(client);
-		LOG_WARNING("Unique JACK client name \"" << client_name << "\" was assigned.");
+		const char *actualName = jack_get_client_name(client);
+		LOG_WARNING("Unique JACK client name \"" << actualName << "\" was assigned.");
 	}
 	
 	streamInfo_ = StreamInfo();

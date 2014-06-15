@@ -39,6 +39,7 @@ private:
 	static void onJackShutdown(void *arg);
 	
 	bool        connect_;
+	const char *clientName_;
 	const char *leftInputName_;
 	const char *rightInputName_;
 	
@@ -56,8 +57,9 @@ public:
 	/**
 	 * \brief Constructor.
 	 */
-	JackFrontend(bool connect, const char *leftInputName, const char *rightInputName) :
+	JackFrontend(bool connect, const char *clientName, const char *leftInputName, const char *rightInputName) :
 		connect_(connect),
+		clientName_(clientName),
 		leftInputName_((leftInputName == NULL) ? "system:capture_1" : leftInputName),
 		rightInputName_((rightInputName == NULL) ? "system:capture_2" : rightInputName),
 		leftPort_(NULL),
