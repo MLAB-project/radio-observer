@@ -75,9 +75,9 @@ Ref<Frontend> App::createFrontend()
 		
 		return new JackFrontend(
 			connect,
-			pathBasename(options().getExecutable()).c_str(),
-			config_->getStrString("jack_left_port", "system:capture_1").c_str(),
-			config_->getStrString("jack_right_port", "system:capture_2").c_str()
+			pathBasename(options().getExecutable()),
+			config_->getStrString("jack_left_port", "system:capture_1"),
+			config_->getStrString("jack_right_port", "system:capture_2")
 			
 			//config()->get("jack_left_port",  "system:capture_1")->asString().c_str(),
 			//config()->get("jack_right_port", "system:capture_2")->asString().c_str()

@@ -77,7 +77,7 @@ void JackFrontend::run()
 {
 	jack_options_t options = JackNullOption;
 	jack_status_t  status;
-	jack_client_t *client = jack_client_open(clientName_,
+	jack_client_t *client = jack_client_open(clientName_.c_str(),
 									 options,
 									 &status,
 									 /* server name */ NULL);
@@ -135,13 +135,13 @@ void JackFrontend::run()
 	}
 	
 	if (connect_) {
-		if (jack_connect(client, leftInputName_, jack_port_name(leftPort_))) {
+		if (jack_connect(client, leftInputName_.c_str(), jack_port_name(leftPort_))) {
 			LOG_ERROR("Failed to connect left input port to \"" <<
 					leftInputName_ << "\"!");
 			return;
 		}
 		
-		if (jack_connect(client, rightInputName_, jack_port_name(rightPort_))) {
+		if (jack_connect(client, rightInputName_.c_str(), jack_port_name(rightPort_))) {
 			LOG_ERROR("Failed to connect right input port to \"" <<
 					rightInputName_ << "\"!");
 			return;
