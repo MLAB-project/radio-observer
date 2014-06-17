@@ -28,8 +28,8 @@
 							"key":     "recorder",
 							"factory": "snapshot",
 
-							// "output_dir": ".",
-							// "output_type": "snap",
+//						    "output_dir": ".",
+//							"output_type": "snap",
 							
 							"snapshot_length": 60,
 							"low_freq":         0,
@@ -39,11 +39,12 @@
 							"key":     "recorder",
 							"factory": "bolid",
 							
-							// "output_dir": ".",
-							// "output_type": "blid",
-							// "metadata_path": ".",
-							
-							"snapshot_length":    60,
+						    "output_dir": ".",
+							"output_type": "blid",
+							"metadata_path": ".",
+                            "advance_time":     1,
+                            "jitter_time":      1,
+
 							"low_freq":         9000,
 							"hi_freq":         11000,
 							"low_detect_freq": 10300,
