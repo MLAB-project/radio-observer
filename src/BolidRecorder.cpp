@@ -144,7 +144,7 @@ void BolidRecorder::update()
 				Ref<Output> metaf = getMetadataFile(t);
 				float duration = (float)(nextSnapshot_.length - 2 * advance_) / (float)backend_->getFFTSampleRate();
 				(*metaf->getStream())
-					<< nextSnapshot_.fileName
+					<< Path::basename(nextSnapshot_.fileName)
 					//<< metaf->getName()
 					<< ";" << noise_
 					<< ";" << peakFreq_
