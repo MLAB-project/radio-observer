@@ -66,13 +66,17 @@ void* SnapshotRecorder::threadMethod()
 		work = snapshots_.drain(received);
 		
 		FOR_EACH(received, snapshot) {
-			write(*snapshot);
-			if (snapshot->includeRawData)
-				writeRaw(*snapshot);
-			
-			{
-				MutexLock bufferLock(bufferMutex_);
-				buffer_->freeReservation(snapshot->reservation);
+			if (buffer_->mark() >= snapshot->end()) {
+				write(*snapshot);
+				if (snapshot->includeRawData)
+					writeRaw(*snapshot);
+				
+				{
+					MutexLock bufferLock(bufferMutex_);
+					buffer_->freeReservation(snapshot->reservation);
+				}
+			} else {
+				snapshots_.send(*snapshot);
 			}
 		}
 		received.clear();
@@ -87,7 +91,8 @@ void SnapshotRecorder::startWriting()
 	{
 		MutexLock bufferLock(bufferMutex_);
 		
-		nextSnapshot_.length = buffer_->size(nextSnapshot_.start);
+		if (nextSnapshot_.length == 0)
+			nextSnapshot_.length = buffer_->size(nextSnapshot_.start);
 		if (snapshotRows_ < nextSnapshot_.length)
 			nextSnapshot_.length = snapshotRows_;
 		int end = nextSnapshot_.start + nextSnapshot_.length;
