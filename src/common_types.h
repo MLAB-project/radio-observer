@@ -9,10 +9,12 @@
 #ifndef COMMON_TYPES_9HUX176Y
 #define COMMON_TYPES_9HUX176Y
 
+#include <stdint.h>
 
-typedef double SampleType;
-typedef long   SampleCount;
-typedef int    SampleRate;
+
+typedef double   SampleType;
+typedef uint64_t SampleCount;
+typedef int      SampleRate;
 
 
 #endif /* end of include guard: COMMON_TYPES_9HUX176Y */
