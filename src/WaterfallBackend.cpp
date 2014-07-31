@@ -60,6 +60,7 @@ int Recorder::fftSamplesToRaw(int sampleCount)
 void* SnapshotRecorder::threadMethod()
 {
 	vector<Snapshot> received;
+	vector<Snapshot> incomplete;
 	bool             work = true;
 	
 	while (work) {
@@ -76,11 +77,14 @@ void* SnapshotRecorder::threadMethod()
 					buffer_->freeReservation(snapshot->reservation);
 				}
 			} else {
-				snapshots_.send(*snapshot);
+				//snapshots_.send(*snapshot);
+				incomplete.push_back(*snapshot);
 			}
 		}
 		received.clear();
 	}
+	
+	snapshots_.sendAll(incomplete);
 	
 	return NULL;
 }
