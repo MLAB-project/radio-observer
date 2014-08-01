@@ -92,11 +92,15 @@ void* SnapshotRecorder::threadMethod()
 			}
 		}
 		received.clear();
+		
+		// Put all of the incomplete snapshots back to the
+		// work queue to be processed later.
+		LOG_DEBUG(
+			"Incomplete snapshots: " << incomplete.size()
+		);
+		snapshots_.sendAll(incomplete);
+		incomplete.clear();
 	}
-	
-	// Put all of the incomplete snapshots back to the
-	// work queue to be processed later.
-	snapshots_.sendAll(incomplete);
 	
 	return NULL;
 }
