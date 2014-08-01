@@ -1,5 +1,12 @@
 
 {
+	"logging": [
+		{
+			"file_name": "radio-observer.log",
+			"log_level": "debug",
+		},
+	],
+	
 	"jack_left_port":  "system:capture_1",      //  JACKd inputs
 	"jack_right_port": "system:capture_2",
 	

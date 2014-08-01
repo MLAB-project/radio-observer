@@ -11,11 +11,13 @@
 #include "utils.h"
 
 
-Ref<Output> BolidRecorder::getMetadataFile(WFTime time)
+Ref<Output> BolidRecorder::getMetadataFile(WFTime       time,
+								   const char * header)
 {
 	string name = getMetadataFileName(time);
 	if (metadataFile_.isNull() || (name != metadataFile_->getName())) {
 		metadataFile_ = new FileOutput(name);
+		*(metadataFile_->getStream()) << "# " << header << std::endl;
 	}
 	return metadataFile_;
 }
@@ -141,7 +143,9 @@ void BolidRecorder::update()
 		} else {
 			if (duration_ >= jitter_) {
 				WFTime t = WFTime::now();
-				Ref<Output> metaf = getMetadataFile(t);
+				Ref<Output> metaf = getMetadataFile(
+					t,
+					"file name; noise; peak f; mag.; duration");
 				float duration = (float)(nextSnapshot_.length - 2 * advance_) / (float)backend_->getFFTSampleRate();
 				(*metaf->getStream())
 					<< Path::basename(nextSnapshot_.fileName)

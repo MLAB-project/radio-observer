@@ -169,15 +169,20 @@ int App::onRun()
 	// 	setOutput(new FileOutput(input_->getFileNameWithExt("png")));
 	// }
 	
-	// TODO: Implement better handling of missing config file.
-	if (config_.isNull())
-		return 1;
-	
 	if (options().get('v')) {
 		cout << PACKAGE_STRING << endl;
 		cout << PACKAGE_URL << endl;
 		return EXIT_SUCCESS;
 	}	
+	
+	// TODO: Implement better handling of missing config file.
+	if (config_.isNull())
+		return 1;
+	
+	Ref<DynObject> loggingConfig = config_->getStrItem("logging");
+	if (!loggingConfig.isNull()) {
+		Logger::readConfig(loggingConfig);
+	}
 	
 	string cfgName = config_->getStrString("configuration", "default");
 	Injector::getInstance().makePlans(config_->getStrItem("configurations"));

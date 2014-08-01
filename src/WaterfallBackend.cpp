@@ -64,26 +64,38 @@ void* SnapshotRecorder::threadMethod()
 	bool             work = true;
 	
 	while (work) {
+		// Get all snapshots from the work queue
 		work = snapshots_.drain(received);
 		
+		// For each snapshot retrieved from the queue
 		FOR_EACH(received, snapshot) {
+			// If the snapshot doesn't end before the current
+			// buffer mark (i.e. the snapshot data is complete),
+			// write the snapshot data to file.
+			// Otherwise, put the snapshot in the list
+			// of incomplete snapshots.
 			if (buffer_->mark() >= snapshot->end()) {
 				write(*snapshot);
 				if (snapshot->includeRawData)
 					writeRaw(*snapshot);
 				
+				// Free the snapshot's buffer reservation.
+				// This is a mechanism that controls that the
+				// data in the ring buffer haven't been overwritten
+				// by next cycle.
 				{
 					MutexLock bufferLock(bufferMutex_);
 					buffer_->freeReservation(snapshot->reservation);
 				}
 			} else {
-				//snapshots_.send(*snapshot);
 				incomplete.push_back(*snapshot);
 			}
 		}
 		received.clear();
 	}
 	
+	// Put all of the incomplete snapshots back to the
+	// work queue to be processed later.
 	snapshots_.sendAll(incomplete);
 	
 	return NULL;
