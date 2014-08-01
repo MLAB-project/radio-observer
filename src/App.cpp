@@ -181,6 +181,7 @@ int App::onRun()
 	
 	Ref<DynObject> loggingConfig = config_->getStrItem("logging");
 	if (!loggingConfig.isNull()) {
+		Logger::clearConfig();
 		Logger::readConfig(loggingConfig);
 	}
 	
