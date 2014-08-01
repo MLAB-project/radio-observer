@@ -362,6 +362,7 @@ void SnapshotRecorder::start()
 	//}
 	
 	nextSnapshot_ = Snapshot(0);
+	nextSnapshot_.fileName = getFileName(nextSnapshot_.start);
 	workerThread_ = new Thread(this, &SnapshotRecorder::threadMethod);
 }
 
