@@ -35,7 +35,7 @@ Compilation
         $ make
 
 4. In the `radio-observer` directory, run `make`. The resulting binary, named
-   `waterfall`, should appear in the project's root directory.
+   `radio-observer`, should appear in the project's root directory.
 5. If anything goes wrong, please send me an email with the output at
    milikjan@fit.cvut.cz .
 
