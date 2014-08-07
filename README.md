@@ -52,7 +52,13 @@ and edit as you like (`$ mv radio-observer.json $HOME/.radio-observer.json`).
 Usage
 -----
 
-    $ radio-observer [WAV_FILE]
+    $ radio-observer [-v] [-c CONFIG_FILE] [WAV_FILE]
+
+- `-v` prints out program version and exits
+- `-c CONFIG_FILE` makes the program use config file `CONFIG_FILE`
+  rather than the default (`$HOME/.radio-observer.json`)
+- `WAF_FILE` makes the program read input from WAV file `WAF_FILE`
+  rather than JACK
 
 Without the `WAV_FILE` argument, `radio-observer` attempts to connect to a jack
 server and then listen forever to the data sent by Jack. If `WAV_FILE` is
