@@ -74,7 +74,8 @@ void* SnapshotRecorder::threadMethod()
 			// write the snapshot data to file.
 			// Otherwise, put the snapshot in the list
 			// of incomplete snapshots.
-			if (buffer_->mark() >= snapshot->end()) {
+			if (buffer_->size(snapshot->start) >= snapshot->length) {
+			//if (buffer_->mark() >= snapshot->end()) {
 				write(*snapshot);
 				if (snapshot->includeRawData)
 					writeRaw(*snapshot);
@@ -95,9 +96,6 @@ void* SnapshotRecorder::threadMethod()
 		
 		// Put all of the incomplete snapshots back to the
 		// work queue to be processed later.
-		LOG_DEBUG(
-			"Incomplete snapshots: " << incomplete.size()
-		);
 		snapshots_.sendAll(incomplete);
 		incomplete.clear();
 	}
