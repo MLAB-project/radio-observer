@@ -92,7 +92,7 @@ protected:
 	
 	Ref<Output> metadataFile_;
 	
-	Ref<Output> getMetadataFile(WFTime time);
+	Ref<Output> getMetadataFile(WFTime time, const char *header);
 	///@}
 	
 	float average(float fromFq, float toFq);

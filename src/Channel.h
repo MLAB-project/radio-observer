@@ -60,6 +60,22 @@ public:
 	}
 	
 	template<class TContainer>
+	void sendAll(TContainer &cont)
+	{
+		if (cont.size() == 0) return;
+		
+		{
+			MutexLock lock(&mutex_);
+			
+			FOR_EACH(cont, item) {
+				buffer_.push_back(*item);
+			}
+			
+			condition_.signal();
+		}
+	}
+	
+	template<class TContainer>
 	bool drain(TContainer &cont)
 	{
 		// Lock mutex and wait for signal

@@ -15,6 +15,7 @@
 using namespace std;
 
 #include "utils.h"
+#include "common_types.h"
 
 
 #define MS_IN_SECOND 1000
@@ -81,14 +82,34 @@ public:
 		
 		return WFTime(sec, usec);
 	}
+
+	inline WFTime add(long seconds, long microseconds)
+	{
+		long usec = safeAdd(time.tv_usec, microseconds % (long)US_IN_SECOND);
+		
+		long sec = safeAdd((long)time.tv_sec, seconds);
+		sec = safeAdd(sec, microseconds / (long)US_IN_SECOND);
+		
+		sec = safeAdd(sec, usec / (long)US_IN_SECOND);
+		usec %= (long)US_IN_SECOND;
+		
+		return WFTime(sec, usec);
+	}
 	
-	inline WFTime addSamples(int sampleCount, int sampleRate)
+	inline WFTime addSamples(SampleCount sampleCount, SampleRate sampleRate)
 	{
 		assert(sampleCount >= 0);
 		
-		long microseconds = (((double)sampleCount / (double)sampleRate) *
+		SampleCount seconds = sampleCount / (SampleCount)sampleRate;
+		SampleCount remainder = sampleCount % (SampleCount)sampleRate;
+		long microseconds = (((double)remainder / (double)sampleRate) *
 						 (double)US_IN_SECOND);
-		return addMicroseconds(microseconds);
+		
+		return add(seconds, microseconds);
+		
+		//long microseconds = (((double)sampleCount / (double)sampleRate) *
+		//				 (double)US_IN_SECOND);
+		//return addMicroseconds(microseconds);
 	}
 	
 	//inline WFTime subSamples(int sampleCount, int sampleRate)

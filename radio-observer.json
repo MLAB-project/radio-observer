@@ -1,55 +1,61 @@
 
 {
-	"jack_left_port":  "system:capture_1",
+	"logging": [
+		{
+			"file_name": "radio-observer.log",
+			"log_level": "debug",
+		},
+	],
+	
+	"jack_left_port":  "system:capture_1",      //  JACKd inputs
 	"jack_right_port": "system:capture_2",
 	
-	"configuration": "default",
+	"configuration": "default",         // name of configuration which will be selected from following list
 	
 	"configurations": [
 		{
-			"key":     "default",
+			"key":     "default",       //  configuration identifier
 			"factory": "pipeline",
 			
 			"children": [
 				{
 					"key":     "backend",
-					"factory": "waterfall",
+					"factory": "waterfall", // waterfall data will be processed
 					
-					"bins":    32768,
-					"overlap": 24576,
+					"bins":    32768,       // number of bins used in FFT calculation
+					"overlap": 24576,       // number of ovelaping samples from previous FFT window
 					
-					"origin": "debug",
+					"origin": "debug",      // name of detection station 
 					
-					"iq_gain":        0,
+					"iq_gain":        0,    // I/Q correction paremeters currently have not effect
 					"iq_phase_shift": 0,
 					
 					"children": [
 						{
-							"key":     "recorder",
-							"factory": "snapshot",
+							"key":     "recorder",      // indentification of method which will procces FFT output
+							"factory": "snapshot",      // method which creates continuous snapshots in eqidistant intervals
 
-							// "output_dir": ".",
-							// "output_type": "snap",
+						    "output_dir": ".",          // absolute path  to data output directory
+							"output_type": "snap",      // data output idetifier (this string will be used in file name)
 							
-							"snapshot_length": 60,
-							"low_freq":         0,
-							"hi_freq":          0,
+							"snapshot_length": 60,      // length of snapshot in seconds. 
+							"low_freq":      8000,      // low (left) snapshot frequency
+							"hi_freq":       1200,      // high (rigth image border) snaphot frequency
 						},
 						{
-							"key":     "recorder",
+							"key":     "recorder",      // inedentification of meteor detector recording.
 							"factory": "bolid",
 							
-							// "output_dir": ".",
-							// "output_type": "snap",
-							// "metadata_path": ".",
-							
-							"snapshot_length":    60,
-							"low_freq":         9000,
-							"hi_freq":         11000,
-							"low_detect_freq": 10300,
-							"hi_detect_freq":  10900,
-							"low_noise_freq":   9000,
-							"hi_noise_freq":    9600,
+						    "output_dir": ".",          // absolute path  to data output directory
+							"output_type": "blid",      // data output idetifier (this string will be used in file name)
+							"metadata_path": ".",       // absolute path  to data output directory
+                            "advance_time":     1,      // time interval of data recorded before detection is triggered
+                            "jitter_time":      1,      // maximal time interval between two separate detection classified as same detection.
+
+							"low_detect_freq": 10300,   // low  frequency meteor detection border
+							"hi_detect_freq":  10900,   // high frequency meteor detection border (in spectrogram)
+							"low_noise_freq":   9000,   // low border for spectral frequency intensity reference
+							"hi_noise_freq":    9600,   // high border for spectral frequency intensity reference
 						},
 					],
 				},

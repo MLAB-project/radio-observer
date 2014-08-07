@@ -43,9 +43,9 @@ void App::readConfig()
 		exit(1);
 	}
 	
-	Ref<PrettyPrinter> printer = new PrettyPrinter();
-	config_->print(printer);
-	printer->print("\n");
+	//Ref<PrettyPrinter> printer = new PrettyPrinter();
+	//config_->print(printer);
+	//printer->print("\n");
 	
 	// Override the configuration read from the file by the command line
 	// options.
@@ -75,8 +75,9 @@ Ref<Frontend> App::createFrontend()
 		
 		return new JackFrontend(
 			connect,
-			config_->getStrString("jack_left_port", "system:capture_1").c_str(),
-			config_->getStrString("jack_right_port", "system:capture_2").c_str()
+			pathBasename(options().getExecutable()),
+			config_->getStrString("jack_left_port", "system:capture_1"),
+			config_->getStrString("jack_right_port", "system:capture_2")
 			
 			//config()->get("jack_left_port",  "system:capture_1")->asString().c_str(),
 			//config()->get("jack_right_port", "system:capture_2")->asString().c_str()
@@ -117,6 +118,8 @@ Ref<Frontend> App::createFrontend()
 //	if (config()->get("detect_bolids", "true")->asBool()) {
 //		backend->addRecorder(new BolidRecorder(
 //			backend,
+//			backend,
+//			backend,
 //			config()->get("waterfall_snapshot_length",     "1")->asFloat(),
 //			config()->get("bolid_left_freq",            "9000")->asFloat(),
 //			config()->get("bolid_right_freq",          "11000")->asFloat(),
@@ -134,6 +137,10 @@ Ref<Frontend> App::createFrontend()
 void App::setUp()
 {
 	AppBase::setUp();
+	
+	options().add('v',
+			    "",
+			    "Show program version.");
 	
 	//Logger::clearConfig();
 	//Logger::addOutput(LOG_LVL_DEBUG, "waterfall.log");
@@ -162,9 +169,21 @@ int App::onRun()
 	// 	setOutput(new FileOutput(input_->getFileNameWithExt("png")));
 	// }
 	
+	if (options().get('v')) {
+		cout << PACKAGE_STRING << endl;
+		cout << PACKAGE_URL << endl;
+		return EXIT_SUCCESS;
+	}	
+	
 	// TODO: Implement better handling of missing config file.
 	if (config_.isNull())
 		return 1;
+	
+	Ref<DynObject> loggingConfig = config_->getStrItem("logging");
+	if (!loggingConfig.isNull()) {
+		Logger::clearConfig();
+		Logger::readConfig(loggingConfig);
+	}
 	
 	string cfgName = config_->getStrString("configuration", "default");
 	Injector::getInstance().makePlans(config_->getStrItem("configurations"));
@@ -228,5 +247,3 @@ App::App() :
 App::~App()
 {
 }
-
-

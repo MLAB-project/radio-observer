@@ -16,78 +16,6 @@ using namespace std;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// WATERFALL RECORDER
-////////////////////////////////////////////////////////////////////////////////
-
-
-//void* WaterfallRecorder::workerThreadMethod()
-//{
-//	MutexLock lock(&mutex_);
-//	
-//	while (!exitWorkerThread_) {
-//		condition_.wait(mutex_);
-//		if (exitWorkerThread_) break;
-//		// TODO: Process data, make create new files as necessary.
-//	}
-//	
-//	return NULL;
-//}
-//
-//
-//void WaterfallRecorder::resize(int bins, long maxBufferSize)
-//{
-//	int rows = inputBuffer_.autoResize(bins, maxBufferSize);
-//	outputBuffer_.resize(rows, bins);
-//	
-//	currentRow_ = 0;
-//}
-//
-//
-//void WaterfallRecorder::start()
-//{
-//	workerThread_ = new Thread(this, &WaterfallRecorder::workerThreadMethod);
-//}
-//
-//
-//void WaterfallRecorder::stop()
-//{
-//	// Lock the mutex, necessary for the condition variable.
-//	MutexLock lock(&mutex_);
-//	
-//	// Signal the worker thread to exit the work loop.
-//	exitWorkerThread_ = true;
-//	condition_.signal();
-//	
-//	// Wait for the worker thread to stop and release the
-//	// resources.
-//	workerThread_->join();
-//	delete workerThread_;
-//	workerThread_ = NULL;
-//}
-//
-//
-//float* WaterfallRecorder::addRow(WFTime time)
-//{
-//	// If the input buffer is full, swap buffers
-//	// and send signal to worker thread that the 
-//	// output buffer is ready to be written to
-//	// file.
-//	if (inputBuffer_.isFull()) {
-//		MutexLock lock(&mutex_);
-//		
-//		inputBuffer_.swap(outputBuffer_);
-//		condition_.signal();
-//		
-//		inputBuffer_.rewind();
-//	}
-//	
-//	// Add row to the input buffer and return
-//	// pointer to it.
-//	return inputBuffer_.addRow(time);
-//}
-
-
-////////////////////////////////////////////////////////////////////////////////
 // RECORDER
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -132,22 +60,44 @@ int Recorder::fftSamplesToRaw(int sampleCount)
 void* SnapshotRecorder::threadMethod()
 {
 	vector<Snapshot> received;
+	vector<Snapshot> incomplete;
 	bool             work = true;
 	
 	while (work) {
+		// Get all snapshots from the work queue
 		work = snapshots_.drain(received);
 		
+		// For each snapshot retrieved from the queue
 		FOR_EACH(received, snapshot) {
-			write(*snapshot);
-			if (snapshot->includeRawData)
-				writeRaw(*snapshot);
-			
-			{
-				MutexLock bufferLock(bufferMutex_);
-				buffer_->freeReservation(snapshot->reservation);
+			// If the snapshot doesn't end before the current
+			// buffer mark (i.e. the snapshot data is complete),
+			// write the snapshot data to file.
+			// Otherwise, put the snapshot in the list
+			// of incomplete snapshots.
+			if (buffer_->size(snapshot->start) >= snapshot->length) {
+			//if (buffer_->mark() >= snapshot->end()) {
+				write(*snapshot);
+				if (snapshot->includeRawData)
+					writeRaw(*snapshot);
+				
+				// Free the snapshot's buffer reservation.
+				// This is a mechanism that controls that the
+				// data in the ring buffer haven't been overwritten
+				// by next cycle.
+				{
+					MutexLock bufferLock(bufferMutex_);
+					buffer_->freeReservation(snapshot->reservation);
+				}
+			} else {
+				incomplete.push_back(*snapshot);
 			}
 		}
 		received.clear();
+		
+		// Put all of the incomplete snapshots back to the
+		// work queue to be processed later.
+		snapshots_.sendAll(incomplete);
+		incomplete.clear();
 	}
 	
 	return NULL;
@@ -159,7 +109,8 @@ void SnapshotRecorder::startWriting()
 	{
 		MutexLock bufferLock(bufferMutex_);
 		
-		nextSnapshot_.length = buffer_->size(nextSnapshot_.start);
+		if (nextSnapshot_.length == 0)
+			nextSnapshot_.length = buffer_->size(nextSnapshot_.start);
 		if (snapshotRows_ < nextSnapshot_.length)
 			nextSnapshot_.length = snapshotRows_;
 		int end = nextSnapshot_.start + nextSnapshot_.length;
@@ -169,22 +120,15 @@ void SnapshotRecorder::startWriting()
 	
 	snapshots_.send(nextSnapshot_);
 	nextSnapshot_ = Snapshot(nextSnapshot_.end());
+	nextSnapshot_.fileName = getFileName(nextSnapshot_.start);
 }
 
 
 /**
- * \bug There is a bug in the time mark in the data stream -
- *      it has been temporarily fixed here by using current time
- *      instead.
+ * \brief Writes a specified snapshot to a FITS file.
  */
 void SnapshotRecorder::write(Snapshot snapshot)
 {
-	// WFTime time = outBuffer_.times[0];
-	// TODO: This is a hotfix, needs to be debugged and fixed later.
-	// Original code:
-	// WFTime time = outBuffer_.times[0];
-	// Hotfix:
-	//WFTime time   = WFTime::now();
 	WFTime time   = fftMarkToTime(snapshot.start);
 	string origin = backend_->getOrigin();
 	
@@ -194,7 +138,8 @@ void SnapshotRecorder::write(Snapshot snapshot)
 	float fftSampleRate = backend_->getFFTSampleRate();
 	
 	string fileName = "!";
-	fileName += getFileName(time);
+	//fileName += getFileName(time);
+	fileName += snapshot.fileName;
 	
 	LOG_INFO("Writing snapshot \"" << (fileName.c_str() + 1) << "\"...");
 	
@@ -301,6 +246,13 @@ void SnapshotRecorder::writeRaw(Snapshot snapshot)
 	w.close();
 	
 	LOG_DEBUG("Finished writing raw snapshot.");
+}
+
+
+string SnapshotRecorder::getFileName(int mark)
+{
+	WFTime time = fftMarkToTime(mark);
+	return getFileName(time);
 }
 
 
@@ -412,6 +364,7 @@ void SnapshotRecorder::start()
 	//}
 	
 	nextSnapshot_ = Snapshot(0);
+	nextSnapshot_.fileName = getFileName(nextSnapshot_.start);
 	workerThread_ = new Thread(this, &SnapshotRecorder::threadMethod);
 }
 
