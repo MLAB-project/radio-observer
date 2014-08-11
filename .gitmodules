@@ -1,3 +1,0 @@
-[submodule "cppapp"]
-	path = cppapp
-	url = git://github.com/nnen/cppapp.git
