@@ -317,6 +317,8 @@ Ref<DIObject> BolidRecorder::make(Ref<DynObject> config, Ref<DIObject> parent)
 	float  averageFreqRange = config->getStrDouble("avg_freq_range",  40);
 	float  thresholdRatio   = config->getStrDouble("threshold",      2.0);
 	
+	double noiseMetadataTime = config->getStrDouble("noise_metadata_time", 3600);
+	
 	string metadataPath     = config->getStrString("metadata_path",  ".");
 	
 	Ref<BolidRecorder> result = new BolidRecorder(
@@ -339,6 +341,8 @@ Ref<DIObject> BolidRecorder::make(Ref<DynObject> config, Ref<DIObject> parent)
 		jitterTime,
 		averageFreqRange,
 		thresholdRatio,
+
+		noiseMetadataTime,
 		
 		metadataPath
 	);

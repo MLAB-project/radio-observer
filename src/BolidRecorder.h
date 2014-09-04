@@ -125,6 +125,7 @@ public:
 			    double                 jitterTime,
 			    float                  averageFreqRange,
 			    float                  threshold,
+			    double                 noiseMetadataTime,
 			    string                 metadataPath) :
 		SnapshotRecorder(backend, snapshotLength, leftFrequency, rightFrequency, outputDir, outputType, compressOutput),
 		minNoiseFq_(minNoiseFq),
@@ -137,7 +138,7 @@ public:
 		jitterTime_(jitterTime),
 		averageFrequencyRange_(averageFreqRange),
 		thresholdRatio_(threshold),
-		noiseMetadataTime_(10.0),
+		noiseMetadataTime_(noiseMetadataTime),
 		metadataPath_(metadataPath),
 		//bolidDetected_(false),
 		//bolidRecord_(false),
