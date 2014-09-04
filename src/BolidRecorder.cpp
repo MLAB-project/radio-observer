@@ -78,10 +78,13 @@ void BolidRecorder::start()
 	CPPAPP_ASSERT(advanceTime_ >= 0.0);
 	CPPAPP_ASSERT(jitterTime_ >= 0.0);
 	CPPAPP_ASSERT(averageFrequencyRange_ > 0.0);
-	advance_         = backend_->timeToFFTSamples(advanceTime_);
-	jitter_          = backend_->timeToFFTSamples(jitterTime_);
-	averageBinRange_ = backend_->frequencyToBin(averageFrequencyRange_) - backend_->frequencyToBin(0);
+	advance_           = backend_->timeToFFTSamples(advanceTime_);
+	jitter_            = backend_->timeToFFTSamples(jitterTime_);
+	averageBinRange_   = backend_->frequencyToBin(averageFrequencyRange_) - backend_->frequencyToBin(0);
+	noiseMetadataRows_ = backend_->timeToFFTSamples(noiseMetadataTime_);
 	CPPAPP_ASSERT(averageBinRange_ > 0);
+	
+	lastNoiseMetadataEntry_ = 
 	
 	state_ = STATE_INIT;
 	
@@ -110,6 +113,28 @@ void BolidRecorder::update()
 	);
 	
 	bool detect = (a > (n * 2.0));
+	
+	if (buffer_->size(lastNoiseMetadataEntry_) >= noiseMetadataRows_) {
+		WFTime t = WFTime::now();
+		Ref<Output> metaf = getMetadataFile(
+			t,
+			"file name; noise; peak f; mag.; duration");
+		
+		float peakFq = backend_->binToFrequency(lowDetectBin_ + p);
+		
+		LOG_INFO("Noise: " << n << "  Peak frequency: " << peakFq << "  Magnitude: " << a);
+		
+		(*metaf->getStream())
+			//<< Path::basename(nextSnapshot_.fileName)
+			<< ";" << n
+			<< ";" << peakFq
+			<< ";" << a
+			<< ";" << 0
+			<< std::endl;
+		metaf->getStream()->flush();
+		
+		lastNoiseMetadataEntry_ = buffer_->mark();
+	}
 	
 	switch (state_) {
 	case STATE_INIT:

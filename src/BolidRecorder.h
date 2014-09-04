@@ -72,6 +72,9 @@ protected:
 	int    averageBinRange_; ///< In bins.
 	float  thresholdRatio_;
 	
+	double noiseMetadataTime_; ///< In seconds.
+	int    noiseMetadataRows_; ///< In FFT rows.
+	
 	string metadataPath_;
 	///@}
 	
@@ -89,6 +92,8 @@ protected:
 	//bool  bolidRecord_;
 	
 	vector<float> noiseBuffer_;
+
+	int lastNoiseMetadataEntry_; ///< Mark into the FFT buffer.
 	
 	Ref<Output> metadataFile_;
 	
@@ -132,6 +137,7 @@ public:
 		jitterTime_(jitterTime),
 		averageFrequencyRange_(averageFreqRange),
 		thresholdRatio_(threshold),
+		noiseMetadataTime_(10.0),
 		metadataPath_(metadataPath),
 		//bolidDetected_(false),
 		//bolidRecord_(false),
