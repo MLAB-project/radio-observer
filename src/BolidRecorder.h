@@ -16,6 +16,16 @@
 
 
 /**
+ * \brief Represents the variables computed and used by the bolid detection algorithm.
+ */
+struct BolidSignal {
+	float noise;
+	float peakFreq;
+	float magnitude;
+};
+
+
+/**
  * \brief Recorder for \ref WaterfallBackend class that detects and records bolids.
  *
  * This class analyzes FFT data passed to it from \ref WaterfallBackend,

@@ -25,6 +25,13 @@
 					"bins":    32768,       // number of bins used in FFT calculation
 					"overlap": 24576,       // number of ovelaping samples from previous FFT window
 					
+					// Chunk size of the FFT buffer - this changes the size of the
+					// largest continuous block of memory allocated by the backend.
+					// Try a smaller value if the program crashes with memory allocation
+					// exception.
+					// 1048576 = 1024 * 1024
+					"buffer_chunk_size": 1048576, 
+					
 					"origin": "debug",      // name of detection station 
 					
 					"iq_gain":        0,    // I/Q correction paremeters currently have not effect

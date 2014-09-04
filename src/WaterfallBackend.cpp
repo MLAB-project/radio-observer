@@ -495,7 +495,8 @@ WaterfallBackend::WaterfallBackend(int    bins,
                                    int    overlap,
                                    string origin) :
 	FFTBackend(bins, overlap),
-	origin_(origin)
+	origin_(origin),
+	bufferChunkSize_(WATERFALL_BACKEND_CHUNK_SIZE)
 {
 }
 
@@ -531,7 +532,7 @@ void WaterfallBackend::startStream(StreamInfo info)
 	}
 	
 	// TODO: Make the chunk size an config option.
-	buffer_.resize(getBins(), WATERFALL_BACKEND_CHUNK_SIZE, bufferSize);
+	buffer_.resize(getBins(), bufferChunkSize_, bufferSize);
 	rawHandles_.resize(buffer_.getCapacity());
 	
 	resizeRawBuffer(fftSamplesToRaw(bufferSize));
@@ -577,6 +578,9 @@ Ref<DIObject> WaterfallBackend::make(Ref<DynObject> config, Ref<DIObject> parent
 		overlap,
 		origin
 	);
+	
+	backend->setBufferChunkSize(
+		config->getStrInt("buffer_chunk_size", WATERFALL_BACKEND_CHUNK_SIZE));
 	
 	backend->setGain(
 		config->getStrDouble("iq_gain", 0));

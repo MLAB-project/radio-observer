@@ -215,11 +215,12 @@ public:
 private:
 	WaterfallBackend(const WaterfallBackend& other);
 	
-	string           origin_;
+	string                 origin_;
 	
-	FFTBuffer             buffer_;
-	Mutex                 bufferMutex_;
-	vector<RawDataHandle> rawHandles_;
+	FFTBuffer              buffer_;
+	int                    bufferChunkSize_;
+	Mutex                  bufferMutex_;
+	vector<RawDataHandle>  rawHandles_;
 	
 	vector<Ref<Recorder> > recorders_;
 
@@ -233,6 +234,9 @@ public:
 	virtual ~WaterfallBackend();
 	
 	string getOrigin() { return origin_; }
+
+	int getBufferChunkSize() { return bufferChunkSize_; }
+	void setBufferChunkSize(int value) { bufferChunkSize_ = value; }
 	
 	void addRecorder(Ref<Recorder> recorder);
 	
