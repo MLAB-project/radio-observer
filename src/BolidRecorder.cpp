@@ -11,6 +11,20 @@
 #include "utils.h"
 
 
+#define METADATA_ENTRY(entry) {                                                          \
+	WFTime t = WFTime::now();                                                           \
+	Ref<Output> metaf = getMetadataFile(                                                \
+		t,                                                                             \
+		"file name; noise; peak f; mag.; duration");                                   \
+	                                                                                    \
+	stringstream buffer;                                                                \
+	(buffer << entry << std::endl);                                                     \
+	buffer.flush();                                                                     \
+	((*metaf->getStream()) << buffer.str());                                            \
+	metaf->getStream()->flush();                                                        \
+}
+
+
 Ref<Output> BolidRecorder::getMetadataFile(WFTime       time,
 								   const char * header)
 {
@@ -115,24 +129,25 @@ void BolidRecorder::update()
 	bool detect = (a > (n * 2.0));
 	
 	if (buffer_->size(lastNoiseMetadataEntry_) >= noiseMetadataRows_) {
-		WFTime t = WFTime::now();
-		Ref<Output> metaf = getMetadataFile(
-			t,
-			"file name; noise; peak f; mag.; duration");
-		
+		//WFTime t = WFTime::now();
+		//Ref<Output> metaf = getMetadataFile(
+		//	t,
+		//	"file name; noise; peak f; mag.; duration");
+		//
 		float peakFq = backend_->binToFrequency(lowDetectBin_ + p);
-		
+		//
 		LOG_INFO("Noise: " << n << "  Peak frequency: " << peakFq << "  Magnitude: " << a);
-		
-		(*metaf->getStream())
-			//<< Path::basename(nextSnapshot_.fileName)
-			<< ";" << n
-			<< ";" << peakFq
-			<< ";" << a
-			<< ";" << 0
-			<< std::endl;
-		metaf->getStream()->flush();
-		
+		//
+		//(*metaf->getStream())
+		//	//<< Path::basename(nextSnapshot_.fileName)
+		//	<< ";" << n
+		//	<< ";" << peakFq
+		//	<< ";" << a
+		//	<< ";" << 0
+		//	<< std::endl;
+		//metaf->getStream()->flush();
+		METADATA_ENTRY(";" << n << ";" << peakFq << ";" << a << ";" << 0);
+		//
 		lastNoiseMetadataEntry_ = buffer_->mark();
 	}
 	
@@ -167,20 +182,27 @@ void BolidRecorder::update()
 			state_ = STATE_BOLID;
 		} else {
 			if (duration_ >= jitter_) {
-				WFTime t = WFTime::now();
-				Ref<Output> metaf = getMetadataFile(
-					t,
-					"file name; noise; peak f; mag.; duration");
+				//WFTime t = WFTime::now();
+				//Ref<Output> metaf = getMetadataFile(
+				//	t,
+				//	"file name; noise; peak f; mag.; duration");
 				float duration = (float)(nextSnapshot_.length - 2 * advance_) / (float)backend_->getFFTSampleRate();
-				(*metaf->getStream())
-					<< Path::basename(nextSnapshot_.fileName)
-					//<< metaf->getName()
-					<< ";" << noise_
-					<< ";" << peakFreq_
-					<< ";" << magnitude_
-					<< ";" << duration
-					<< std::endl;
-				metaf->getStream()->flush();
+				//(*metaf->getStream())
+				//	<< Path::basename(nextSnapshot_.fileName)
+				//	//<< metaf->getName()
+				//	<< ";" << noise_
+				//	<< ";" << peakFreq_
+				//	<< ";" << magnitude_
+				//	<< ";" << duration
+				//	<< std::endl;
+				//metaf->getStream()->flush();
+				METADATA_ENTRY(
+					Path::basename(nextSnapshot_.fileName) << ";"
+					<< noise_ << ";"
+					<< peakFreq_ << ";"
+					<< magnitude_ << ";"
+					<< duration
+					);
 				
 				MessageDispatch<BolidMessage>::getInstance().sendMessage(BolidMessage(
 					peakFreq_ - (maxDetectFq_ - minDetectFq_) / 4,
