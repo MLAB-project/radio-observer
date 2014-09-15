@@ -25,16 +25,16 @@
 }
 
 
-Ref<Output> BolidRecorder::getMetadataFile(WFTime       time,
-								   const char * header)
-{
-	string name = getMetadataFileName(time);
-	if (metadataFile_.isNull() || (name != metadataFile_->getName())) {
-		metadataFile_ = new FileOutput(name);
-		*(metadataFile_->getStream()) << "# " << header << std::endl;
-	}
-	return metadataFile_;
-}
+//Ref<Output> BolidRecorder::getMetadataFile(WFTime       time,
+//								   const char * header)
+//{
+//	string name = getMetadataFileName(time);
+//	if (metadataFile_.isNull() || (name != metadataFile_->getName())) {
+//		metadataFile_ = new FileOutput(name);
+//		*(metadataFile_->getStream()) << "# " << header << std::endl;
+//	}
+//	return metadataFile_;
+//}
 
 
 float BolidRecorder::average(float fromFq, float toFq)
@@ -53,9 +53,14 @@ float BolidRecorder::average(float fromFq, float toFq)
 string BolidRecorder::getMetadataFileName(WFTime time)
 {
 	ostringstream ss;
+	//ss <<
+	//	time.getHour().format("%Y%m%d%H%M%S") <<
+	//	"_" <<
+	//	backend_->getOrigin() <<
+	//	"_meta.csv";
+	
 	ss <<
-		time.getHour().format("%Y%m%d%H%M%S") <<
-		"_" <<
+		"%Y%m%d%H%M%S_" <<
 		backend_->getOrigin() <<
 		"_meta.csv";
 	
@@ -146,8 +151,15 @@ void BolidRecorder::update()
 		//	<< ";" << 0
 		//	<< std::endl;
 		//metaf->getStream()->flush();
-		METADATA_ENTRY(";" << n << ";" << peakFq << ";" << a << ";" << 0);
-		//
+		//METADATA_ENTRY(";" << n << ";" << peakFq << ";" << a << ";" << 0);
+		CSV_LOG_ENTRY(
+			metadataFile_, 
+			WFTime::now(), 
+			";"
+			<< n << ";"
+			<< peakFq << ";"
+			<< a << ";"
+			<< 0);
 		lastNoiseMetadataEntry_ = buffer_->mark();
 	}
 	
@@ -196,7 +208,16 @@ void BolidRecorder::update()
 				//	<< ";" << duration
 				//	<< std::endl;
 				//metaf->getStream()->flush();
-				METADATA_ENTRY(
+				//METADATA_ENTRY(
+				//	Path::basename(nextSnapshot_.fileName) << ";"
+				//	<< noise_ << ";"
+				//	<< peakFreq_ << ";"
+				//	<< magnitude_ << ";"
+				//	<< duration
+				//	);
+				CSV_LOG_ENTRY(
+					metadataFile_,
+					WFTime::now(),
 					Path::basename(nextSnapshot_.fileName) << ";"
 					<< noise_ << ";"
 					<< peakFreq_ << ";"

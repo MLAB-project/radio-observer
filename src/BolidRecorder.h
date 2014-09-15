@@ -13,6 +13,7 @@
 #include "WaterfallBackend.h"
 #include "MessageDispatch.h"
 #include "BolidMessage.h"
+#include "CsvLog.h"
 
 
 /**
@@ -104,10 +105,12 @@ protected:
 	vector<float> noiseBuffer_;
 
 	int lastNoiseMetadataEntry_; ///< Mark into the FFT buffer.
+
+	Ref<CsvLog> metadataFile_;
 	
-	Ref<Output> metadataFile_;
+	//Ref<Output> metadataFile_;
 	
-	Ref<Output> getMetadataFile(WFTime time, const char *header);
+	//Ref<Output> getMetadataFile(WFTime time, const char *header);
 	///@}
 	
 	float average(float fromFq, float toFq);
@@ -168,6 +171,16 @@ public:
 		
 		lowNoiseBin_ = min(minFqBin, maxFqBin);
 		noiseWidth_  = max(minFqBin, maxFqBin) - lowNoiseBin_;
+
+		ostringstream ss;
+		ss <<
+			"%Y%m%d%H%M%S_" <<
+			backend_->getOrigin() <<
+			"_meta.csv";
+	
+		metadataFile_ = new CsvLog(
+			Path::join(metadataPath_, ss.str()),
+			"file name; noise; peak f.; mag.; duration");
 	}
 	
 	/**
