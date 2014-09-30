@@ -12,33 +12,66 @@
 
 #include <ctime>
 
+#include "WFTime.h"
+#include "MessageDispatch.h"
+
+
+struct NoiseMessage : public Message<NoiseMessage> {
+	WFTime time;
+	float  noise;
+	float  peakFrequency;
+	float  magnitude;
+
+	NoiseMessage() :
+		time(WFTime::now()),
+		noise(0),
+		peakFrequency(0),
+		magnitude(0)
+	{}
+	
+	NoiseMessage(WFTime time, float noise, float peakFrequency, float magnitude) :
+		time(time),
+		noise(noise),
+		peakFrequency(peakFrequency),
+		magnitude(magnitude)
+	{}
+	
+	virtual string toString() {
+		ostringstream ss;
+		
+		ss << "NoiseMessage(" <<
+			noise << ", " <<
+			peakFrequency << ", " <<
+			magnitude << ")";
+		
+		return ss.str();
+	}
+};
+
 
 /**
  * \todo Write documentation for class BolidMessage.
  */
-struct BolidMessage {
+struct BolidMessage : public NoiseMessage {
 	float minFreq;
 	float maxFreq;
 	
 	int startSample;
 	int endSample;
 	
-	float peakFreq;
-	float magnitude;
-	float noise;
-	
 	BolidMessage() :
+		NoiseMessage(),
 		minFreq(0), maxFreq(0),
-		startSample(0), endSample(0),
-		peakFreq(0), magnitude(0), noise(0)
+		startSample(0), endSample(0)
 	{
 	}
 	
-	BolidMessage(float minFreq, float maxFreq, int startSample, int endSample,
-			   float peakFreq, float magnitude, float noise) :
+	BolidMessage(WFTime time,
+			   float noise, float peakFrequency, float magnitude,
+			   float minFreq, float maxFreq, int startSample, int endSample) :
+		NoiseMessage(time, noise, peakFrequency, magnitude),
 		minFreq(minFreq), maxFreq(maxFreq),
-		startSample(startSample), endSample(endSample),
-		peakFreq(peakFreq), magnitude(magnitude), noise(noise)
+		startSample(startSample), endSample(endSample)
 	{
 	}
 };

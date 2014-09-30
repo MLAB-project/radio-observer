@@ -14,6 +14,7 @@
 #include "FITSWriter.h"
 #include "RingBuffer.h"
 #include "Channel.h"
+#include "CsvLog.h"
 #include "utils.h"
 
 #include <cmath>
@@ -223,6 +224,9 @@ private:
 	vector<RawDataHandle>  rawHandles_;
 	
 	vector<Ref<Recorder> > recorders_;
+	
+	string                 metadataPath_;
+	Ref<CsvLog>            metadataFile_;
 
 protected:
 	virtual void processFFT(const fftw_complex *data, int size, DataInfo info, int rawMark);
@@ -234,7 +238,10 @@ public:
 	virtual ~WaterfallBackend();
 	
 	string getOrigin() { return origin_; }
-
+	
+	void setMetadataPath(const string& path) { metadataPath_ = path; } 
+	Ref<CsvLog> getMetadataFile();
+	
 	int getBufferChunkSize() { return bufferChunkSize_; }
 	void setBufferChunkSize(int value) { bufferChunkSize_ = value; }
 	

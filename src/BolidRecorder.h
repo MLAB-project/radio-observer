@@ -86,7 +86,7 @@ protected:
 	double noiseMetadataTime_; ///< In seconds.
 	int    noiseMetadataRows_; ///< In FFT rows.
 	
-	string metadataPath_;
+	//string metadataPath_;
 	///@}
 	
 	/**
@@ -106,7 +106,7 @@ protected:
 
 	int lastNoiseMetadataEntry_; ///< Mark into the FFT buffer.
 
-	Ref<CsvLog> metadataFile_;
+	//Ref<CsvLog> metadataFile_;
 	
 	//Ref<Output> metadataFile_;
 	
@@ -138,8 +138,8 @@ public:
 			    double                 jitterTime,
 			    float                  averageFreqRange,
 			    float                  threshold,
-			    double                 noiseMetadataTime,
-			    string                 metadataPath) :
+			    double                 noiseMetadataTime) :
+			    //string                 metadataPath) :
 		SnapshotRecorder(backend, snapshotLength, leftFrequency, rightFrequency, outputDir, outputType, compressOutput),
 		minNoiseFq_(minNoiseFq),
 		maxNoiseFq_(maxNoiseFq),
@@ -152,7 +152,7 @@ public:
 		averageFrequencyRange_(averageFreqRange),
 		thresholdRatio_(threshold),
 		noiseMetadataTime_(noiseMetadataTime),
-		metadataPath_(metadataPath),
+		//metadataPath_(metadataPath),
 		//bolidDetected_(false),
 		//bolidRecord_(false),
 		duration_(0)
@@ -171,16 +171,16 @@ public:
 		
 		lowNoiseBin_ = min(minFqBin, maxFqBin);
 		noiseWidth_  = max(minFqBin, maxFqBin) - lowNoiseBin_;
-
-		ostringstream ss;
-		ss <<
-			"%Y%m%d%H%M%S_" <<
-			backend_->getOrigin() <<
-			"_meta.csv";
-	
-		metadataFile_ = new CsvLog(
-			Path::join(metadataPath_, ss.str()),
-			"file name; noise; peak f.; mag.; duration");
+		
+		//ostringstream ss;
+		//ss <<
+		//	"%Y%m%d%H%M%S_" <<
+		//	backend_->getOrigin() <<
+		//	"_meta.csv";
+		//
+		//metadataFile_ = new CsvLog(
+		//	Path::join(metadataPath_, ss.str()),
+		//	"file name; noise; peak f.; mag.; duration");
 	}
 	
 	/**
@@ -188,7 +188,7 @@ public:
 	 */
 	virtual ~BolidRecorder() {}
 	
-	virtual string getMetadataFileName(WFTime time);
+	//virtual string getMetadataFileName(WFTime time);
 	
 	virtual void start();
 	virtual void update();

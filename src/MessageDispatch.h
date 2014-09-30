@@ -97,5 +97,17 @@ public:
 };
 
 
+template<class T>
+struct Message {
+	virtual string toString() {
+		return "Message()";
+	};
+	
+	void send() {
+		MessageDispatch<T>::getInstance().sendMessage(*this);
+	}
+};
+
+
 #endif /* end of include guard: MESSAGEQUEUE_D3GJUHJZ */
 

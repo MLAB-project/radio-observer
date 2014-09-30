@@ -432,6 +432,23 @@ CPPAPP_DI_METHOD("snapshot", SnapshotRecorder, make);
 ////////////////////////////////////////////////////////////////////////////////
 
 
+Ref<CsvLog> WaterfallBackend::getMetadataFile()
+{
+	if (metadataFile_.isNull()) {
+		ostringstream ss;
+		ss <<
+			"%Y%m%d%H%M%S_" <<
+			getOrigin() <<
+			"_meta.csv";
+		
+		metadataFile_ = new CsvLog(
+			Path::join(metadataPath_, ss.str()),
+			"file name; noise; peak f.; mag.; duration");
+	}
+	return metadataFile_;
+}
+
+
 void WaterfallBackend::processFFT(const fftw_complex *data, int size, DataInfo info, int rawMark)
 {
 	//float *row = inBuffer_.addRow(info.timeOffset);
@@ -578,6 +595,9 @@ Ref<DIObject> WaterfallBackend::make(Ref<DynObject> config, Ref<DIObject> parent
 		overlap,
 		origin
 	);
+	
+	backend->setMetadataPath(
+		config->getStrString("metadata_path", "."));
 	
 	backend->setBufferChunkSize(
 		config->getStrInt("buffer_chunk_size", WATERFALL_BACKEND_CHUNK_SIZE));

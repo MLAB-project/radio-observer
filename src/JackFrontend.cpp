@@ -188,7 +188,7 @@ void BolidMessageListener::sendMessage(const BolidMessage &msg)
 		0,
 		msg.minFreq,
 		msg.maxFreq,
-		msg.peakFreq,
+		msg.peakFrequency,
 		msg.magnitude,
 		msg.noise
 	);

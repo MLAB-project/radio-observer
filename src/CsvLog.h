@@ -26,7 +26,7 @@ using namespace cppapp;
 
 
 /**
- * \todo Write documentation for class CsvLog.
+ * \brief CSV logging class.
  */
 class CsvLog : public Object {
 private:
@@ -58,11 +58,11 @@ public:
 
 
 #define CSV_LOG_ENTRY(log, time, entry) { \
-	WFTime t = (time); \
+	WFTime t__ = (time); \
 	std::stringstream buffer; \
 	(buffer << entry); \
 	buffer.flush(); \
-	(log)->write(t, buffer.str()); \
+	(log)->write(t__, buffer.str()); \
 }
 
 
