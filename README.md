@@ -5,6 +5,9 @@ This README is for version `0.3`.
 
 Radioastronomy utility. For more information, see [the MLAB wiki](http://wiki.mlab.cz/doku.php?id=en:programming_tasks#open-source_meteor_detection_toolkit).
 
+[![Build Status](https://travis-ci.org/MLAB-project/radio-observer.svg?branch=master)](https://travis-ci.org/MLAB-project/radio-observer)
+
+
 ### Table of Contents
 * [Compilation](#compilation)
 * [Configuration](#configuration)
