@@ -20,7 +20,7 @@ TEST_BIN     = $(TESTS_DIR)/tests
 DOCS_ARCH    = $(BIN_NAME)-$(VERSION)-docs.html.tar.gz
 
 UNAME       := $(shell uname)
-CXX          = clang++
+# CXX          = clang++
 CXXFLAGS     = -ggdb -O0 -Wall -Icppapp -rdynamic
 LDFLAGS      = -Lcppapp -lcppapp -lfftw3 -lcfitsio -lpthread
 ifeq ($(UNAME),Darwin)
