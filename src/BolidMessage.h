@@ -49,6 +49,10 @@ struct NoiseMessage : public Message<NoiseMessage> {
 };
 
 
+struct SnapshotMessage : public NoiseMessage {
+};
+
+
 /**
  * \todo Write documentation for class BolidMessage.
  */

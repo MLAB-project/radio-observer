@@ -42,6 +42,20 @@ public:
 };
 
 
+template<class T>
+class MessageQueueListener : public MessageListener<T> {
+private:
+	Channel<T> queue_;
+
+public:
+	virtual void sendMessage(const T &msg) {
+		queue_.send(msg);
+	}
+	
+	Channel<T>& getQueue() { return queue_; }
+};
+
+
 /**
  * \brief Class dispatching messages to a collection of message listeners.
  *
