@@ -123,5 +123,73 @@ struct Message {
 };
 
 
+class DynMessage {
+public:
+	virtual void* getSelector() const = 0;
+};
+
+
+class DynMessageListener : public Object {
+private:
+	class MethodRefBase {
+	public:
+		virtual void handleMessage(DynMessageListener *listener, const DynMessage& msg) = 0;
+		virtual ~MethodRefBase();
+	};
+	
+	
+	template<class T>
+	class MethodRef : public MethodRefBase {
+	public:
+		typedef void (*Function)(const T& msg);
+		typedef void (DynMessageListener::*Method)(const T& msg);
+	
+	private:
+		Function messageFunction;
+		Method   messageMethod;
+	
+	public:
+		MethodRef(Function fn, Method meth) :
+			messageFunction(fn), messageMethod(meth)
+		{}
+
+		virtual ~MethodRef() {
+			messageFunction = NULL;
+			messageMethod  = NULL;
+		}
+		
+		virtual void handleMessage(DynMessageListener *listener, const DynMessage& msg) {
+			const T *msgPtr = dynamic_cast<T>(&msg);
+			(listener->*messageMethod)(*msgPtr);
+		}
+		
+	};
+	
+	
+	typedef map<void*, MethodRefBase*> MethodMap;
+	
+	MethodMap methodMap_;
+
+protected:
+
+public:
+	template<class T>
+	void addMethod(void (*fn)(const T& msg), void (DynMessageListener::*meth)(const T& msg)) {
+		methodMap_[fn] = new MethodRef<T>(fn, meth);
+	}
+	
+	void handleMessage(const DynMessage& msg) {
+		methodMap_[msg.getSelector()]->handleMessage(this, msg);
+	}
+	
+	virtual ~DynMessageListener() {
+		FOR_EACH(methodMap_, entry) {
+			delete entry->second;
+			entry->second = NULL;
+		}
+	}
+};
+
+
 #endif /* end of include guard: MESSAGEQUEUE_D3GJUHJZ */
 

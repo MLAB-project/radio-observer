@@ -72,15 +72,18 @@ public:
 		rawHandles_  = rawHandles;
 	}
 	
-	inline int getSampleRate();
-	inline int getFFTSampleRate();
+	int getSampleRate();
+	int getFFTSampleRate();
 	
 	inline int fftMarkToRaw(int mark);
 	inline WFTime fftMarkToTime(int mark);
 	/**
 	 * \brief Converts number of FFT samples to number raw I/Q samples.
 	 */
-	inline int fftSamplesToRaw(int sampleCount);
+	inline int fftSamplesToRaw(int sampleCount)
+	{
+		return ((double)sampleCount / (double)getFFTSampleRate()) * (double)getSampleRate();
+	}
 	
 	virtual int requestBufferSize() { return 0; }
 	

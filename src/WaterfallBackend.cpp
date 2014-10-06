@@ -46,10 +46,10 @@ WFTime Recorder::fftMarkToTime(int mark)
 }
 
 
-int Recorder::fftSamplesToRaw(int sampleCount)
-{
-	return ((double)sampleCount / (double)getFFTSampleRate()) * (double)getSampleRate();
-}
+// int Recorder::fftSamplesToRaw(int sampleCount)
+// {
+// 	return ((double)sampleCount / (double)getFFTSampleRate()) * (double)getSampleRate();
+// }
 
 
 ////////////////////////////////////////////////////////////////////////////////

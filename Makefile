@@ -21,7 +21,11 @@ DOCS_ARCH    = $(BIN_NAME)-$(VERSION)-docs.html.tar.gz
 
 UNAME       := $(shell uname)
 # CXX          = clang++
-CXXFLAGS     = -ggdb -O0 -Wall -Icppapp -rdynamic
+ifeq ($(CXX),g++)
+	CXXFLAGS     = -ggdb -O0 -Wall -Icppapp -rdynamic
+else
+	CXXFLAGS     = -ggdb -O0 -Wall -Icppapp
+endif
 LDFLAGS      = -Lcppapp -lcppapp -lfftw3 -lcfitsio -lpthread
 ifeq ($(UNAME),Darwin)
 	LDFLAGS += -framework jackmp
