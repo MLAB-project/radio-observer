@@ -171,13 +171,13 @@ int App::onRun()
 	
 	if (options().get('v')) {
 		cout << PACKAGE_STRING << endl;
-		cout << PACKAGE_URL << endl;
+		// cout << PACKAGE_URL << endl;
 		return EXIT_SUCCESS;
 	}	
 	
 	// TODO: Implement better handling of missing config file.
 	if (config_.isNull())
-		return 1;
+		return EXIT_NO_CONFIG;
 	
 	Ref<DynObject> loggingConfig = config_->getStrItem("logging");
 	if (!loggingConfig.isNull()) {
@@ -185,13 +185,15 @@ int App::onRun()
 		Logger::readConfig(loggingConfig);
 	}
 	
+	LOG_INFO("***** Starting Radio Observer v" PACKAGE_VERSION " *****");
+	
 	string cfgName = config_->getStrString("configuration", "default");
 	Injector::getInstance().makePlans(config_->getStrItem("configurations"));
 	
 	pipeline_ = Injector::getInstance().instantiateAs<Pipeline>(cfgName);
 	if (pipeline_.isNull()) {
 		LOG_ERROR("Initialization failed.");
-		return 1;
+		return EXIT_INIT_FAILED;
 	}
 	
 	if (pipeline_->getFrontend().isNull())
@@ -204,10 +206,16 @@ int App::onRun()
 	
 	Signal::INT.install();
 	Signal::INT.pushMethod(this, &App::interruptHandler);
+	Signal::TERM.install();
+	Signal::TERM.pushMethod(this, &App::termHandler);
 	//frontend_->run();
 	pipeline_->run();
+	Signal::TERM.pop();
+	Signal::TERM.uninstall();
 	Signal::INT.pop();
 	Signal::INT.uninstall();
+	
+	LOG_INFO("Exiting.");
 	
 	// WAVStream stream(input_);
 	// //Ref<Backend> backend = new SimpleWaterfallBackend(output(), 0.2, 0.1);
@@ -229,6 +237,13 @@ void App::interruptHandler(int sigNum)
 	LOG_WARNING("Received INT signal, stopping the frontend.");
 	pipeline_->stop();
 	//frontend_->stop();
+}
+
+
+void App::termHandler(int sigNum)
+{
+	LOG_WARNING("TERM signal received, exiting.");
+	exit(EXIT_TERM_RECEIVED);
 }
 
 

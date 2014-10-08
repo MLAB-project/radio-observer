@@ -23,6 +23,11 @@ using namespace cppapp;
 #include "Signal.h"
 
 
+#define EXIT_TERM_RECEIVED 1
+#define EXIT_NO_CONFIG     2
+#define EXIT_INIT_FAILED   3
+
+
 /**
  * \brief Represents the application and its entry point.
  */
@@ -47,6 +52,7 @@ protected:
 	virtual int onRun();
 	
 	void interruptHandler(int sigNum);
+	void termHandler(int sigNum);
 
 public:
 	App();

@@ -43,7 +43,7 @@ string CsvLog::getFileName(WFTime time)
 
 void CsvLog::write(WFTime time, string entry)
 {
-	MutexLock lock(&mutex_);
+	// MutexLock lock(&mutex_);
 	
 	ostream& stream = *(getOutput(time)->getStream());
 	stream << entry << std::endl;

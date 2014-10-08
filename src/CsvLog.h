@@ -36,7 +36,7 @@ private:
 	string      header_;
 	
 	Ref<Output> output_;
-	Mutex       mutex_;
+	// Mutex       mutex_;
 	
 	Ref<Output> getOutput(WFTime);
 	ostream&    getStream(WFTime);
