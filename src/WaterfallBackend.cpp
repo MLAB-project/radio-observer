@@ -387,11 +387,19 @@ void SnapshotRecorder::stop()
 void SnapshotRecorder::update()
 {
 	if (buffer_->size(nextSnapshot_.start) >= snapshotRows_ + 2) {
-		LOG_DEBUG("Snapshot full [start_: " << nextSnapshot_.start <<
+		LOG_DEBUG("SnapshotRecorder: Snapshot full [start_: " << nextSnapshot_.start <<
 				", snapshotRows_: " << snapshotRows_ <<
 				", snapshotLength_: " << snapshotLength_ <<
 				", buffer_->size(start_): " << buffer_->size(nextSnapshot_.start) <<
 				"].");
+		LOG_DEBUG("SnapshotRecorder: processing calls count = "
+				<< backend_->getProcessingCount()
+				<< ", average processing time (ms) = "
+				<< backend_->getAverageProcessingTime()
+				<< ", max processing time (ms) = "
+				<< backend_->getMaxProcessingTime()
+				<< ", min processing time (ms) = "
+				<< backend_->getMinProcessingTime());
 		startWriting();
 	}
 }

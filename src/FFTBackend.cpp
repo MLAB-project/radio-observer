@@ -194,6 +194,8 @@ void FFTBackend::process(const vector<Complex> &data, DataInfo info)
 	assert(sizeof(Complex) == sizeof(in_[0]));
 	//assert(binOverlap_ <= (bins_ - binOverlap_));
 	
+	processingStopwatch_.start();
+	
 	int size = data.size();
 	const Complex *src = &(data[0]);
 	
@@ -263,6 +265,9 @@ void FFTBackend::process(const vector<Complex> &data, DataInfo info)
 		
 		inMark_ += size;
 	}
+	
+	processingStopwatch_.end();
+	processingTime_.add(processingStopwatch_.getMilliseconds());
 }
 
 
