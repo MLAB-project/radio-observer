@@ -231,6 +231,7 @@ public:
 	{
 		processingTime_.clear();
 		fftTime_.clear();
+		analysisTime_.clear();
 	}
 	
 	inline static int16_t floatToInt(float f)
