@@ -267,7 +267,9 @@ void FFTBackend::process(const vector<Complex> &data, DataInfo info)
 	}
 	
 	processingStopwatch_.end();
-	processingTime_.add(processingStopwatch_.getMilliseconds());
+	double ms = processingStopwatch_.getMilliseconds();
+	processingTime_.add(ms);
+	totalProcessingTime_.add(ms);
 }
 
 

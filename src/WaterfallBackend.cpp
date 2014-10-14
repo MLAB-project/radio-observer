@@ -399,7 +399,12 @@ void SnapshotRecorder::update()
 				<< ", max processing time (ms) = "
 				<< backend_->getMaxProcessingTime()
 				<< ", min processing time (ms) = "
-				<< backend_->getMinProcessingTime());
+				<< backend_->getMinProcessingTime()
+				<< ", total processing call count = "
+				<< backend_->getTotalProcessingCount()
+				<< ", total max processing time (ms) = "
+				<< backend_->getTotalMaxProcessingTime());
+		backend_->clearProcessingTime();
 		startWriting();
 	}
 }

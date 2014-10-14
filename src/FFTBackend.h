@@ -84,6 +84,7 @@ private:
 	DataInfo      info_; ///< FFT data stream info (as opposed to the raw data stream)
 	
 	RunningAverage2<double> processingTime_; ///< Running average of FFT calculation times.
+	RunningAverage2<double> totalProcessingTime_; ///< Running average of FFT calculation times.
 	Stopwatch               processingStopwatch_; ///< Processing time stopwatch.
 	
 protected:
@@ -97,11 +98,6 @@ protected:
 	//virtual int getRawBufferSize() { return 1024; }
 	
 	virtual void processFFT(const fftw_complex *data, int size, DataInfo info, int rawMark) {}
-	
-	void clearProcessingTime()
-	{
-		processingTime_.clear();
-	}
 	
 public:
 	FFTBackend(int bins, int overlap);
@@ -201,8 +197,14 @@ public:
 	
 	double getAverageProcessingTime() { return processingTime_.getValue(); }
 	double getMaxProcessingTime() { return processingTime_.max; }
+	double getTotalMaxProcessingTime() { return totalProcessingTime_.max; }
 	double getMinProcessingTime() { return processingTime_.min; }
 	long   getProcessingCount() { return processingTime_.count; }
+	long   getTotalProcessingCount() { return totalProcessingTime_.count; }
+	void clearProcessingTime()
+	{
+		processingTime_.clear();
+	}
 
 	inline static int16_t floatToInt(float f)
 	{
