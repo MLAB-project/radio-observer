@@ -9,6 +9,7 @@
 #include "App.h"
 
 #include "BolidRecorder.h"
+#include "git_version.h"
 
 
 string App::getDefaultConfigFile()
@@ -170,7 +171,7 @@ int App::onRun()
 	// }
 	
 	if (options().get('v')) {
-		cout << PACKAGE_STRING << endl;
+		cout << PACKAGE_STRING << " " << GIT_VERSION << endl;
 		// cout << PACKAGE_URL << endl;
 		return EXIT_SUCCESS;
 	}	
@@ -185,7 +186,7 @@ int App::onRun()
 		Logger::readConfig(loggingConfig);
 	}
 	
-	LOG_INFO("***** Starting Radio Observer v" PACKAGE_VERSION " *****");
+	LOG_INFO("***** Starting Radio Observer v" PACKAGE_VERSION " " GIT_VERSION " *****");
 	
 	string cfgName = config_->getStrString("configuration", "default");
 	Injector::getInstance().makePlans(config_->getStrItem("configurations"));

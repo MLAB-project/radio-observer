@@ -37,7 +37,9 @@ endif
 ECHO         = $(shell which echo)
 
 
-build: $(BIN_NAME)
+build:
+	$(MAKE) src/git_version.h
+	$(MAKE) $(BIN_NAME)
 
 
 -include $(DEP_FILES)
@@ -45,7 +47,7 @@ build: $(BIN_NAME)
 
 clean:
 	@echo "========= CLEANING =================================================="
-	rm -f $(OBJECT_FILES) $(BIN_NAME)
+	rm -f $(OBJECT_FILES) $(BIN_NAME) src/git_version.h
 	$(MAKE) -C $(TESTS_DIR) clean
 	@echo
 
@@ -95,7 +97,11 @@ endif
 	@echo
 
 
-.PHONY: all build clean rebuild deps test clean-deps docs clean-docs
+src/git_version.h:
+	git log -1 --pretty="#define GIT_VERSION \"%h %d\"" > $@
+
+
+.PHONY: all build clean rebuild deps test clean-deps docs clean-docs 
 
 
 %.d: %.cpp $(H_FILES)
