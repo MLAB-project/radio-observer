@@ -87,6 +87,10 @@ private:
 	RunningAverage2<double> totalProcessingTime_; ///< Running average of FFT calculation times.
 	Stopwatch               processingStopwatch_; ///< Processing time stopwatch.
 	
+	RunningAverage2<double> fftTime_;
+	RunningAverage2<double> analysisTime_;
+	Stopwatch               stopwatch_;
+	
 protected:
 	int   bins_; ///< Number of FFT output bins.
 	/// Number of FFT results per second (Hz).
@@ -195,17 +199,40 @@ public:
 		return time * fftSampleRate_;
 	}
 	
-	double getAverageProcessingTime() { return processingTime_.getValue(); }
-	double getMaxProcessingTime() { return processingTime_.max; }
-	double getTotalMaxProcessingTime() { return totalProcessingTime_.max; }
-	double getMinProcessingTime() { return processingTime_.min; }
-	long   getProcessingCount() { return processingTime_.count; }
-	long   getTotalProcessingCount() { return totalProcessingTime_.count; }
-	void clearProcessingTime()
+	//double getAverageProcessingTime() { return processingTime_.getValue(); }
+	//double getMaxProcessingTime() { return processingTime_.max; }
+	//double getTotalMaxProcessingTime() { return totalProcessingTime_.max; }
+	//double getMinProcessingTime() { return processingTime_.min; }
+	//long   getProcessingCount() { return processingTime_.count; }
+	//long   getTotalProcessingCount() { return totalProcessingTime_.count; }
+	void   logProcessingTimes()
+	{
+		LOG_DEBUG("FFTBackend: avg. proc. time (ms) = "
+				<< processingTime_.getValue()
+				<< ", max. proc. time (ms) = "
+				<< processingTime_.max
+				<< ", call count = "
+				<< processingTime_.count
+				
+				<< ", avg. fft time (ms) = "
+				<< fftTime_.getValue()
+				<< ", max. fft time (ms) = "
+				<< fftTime_.max
+				<< ", fft count = "
+				<< fftTime_.count
+
+				<< ", avg. anal. time (ms) = "
+				<< analysisTime_.getValue()
+				<< ", max. anal. time (ms) = "
+				<< analysisTime_.max
+		);
+	}
+	void   clearProcessingTime()
 	{
 		processingTime_.clear();
+		fftTime_.clear();
 	}
-
+	
 	inline static int16_t floatToInt(float f)
 	{
 		if (f > 1.0) f = 1.0;

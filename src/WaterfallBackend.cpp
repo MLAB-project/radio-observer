@@ -392,18 +392,19 @@ void SnapshotRecorder::update()
 				", snapshotLength_: " << snapshotLength_ <<
 				", buffer_->size(start_): " << buffer_->size(nextSnapshot_.start) <<
 				"].");
-		LOG_DEBUG("SnapshotRecorder: processing calls count = "
-				<< backend_->getProcessingCount()
-				<< ", average processing time (ms) = "
-				<< backend_->getAverageProcessingTime()
-				<< ", max processing time (ms) = "
-				<< backend_->getMaxProcessingTime()
-				<< ", min processing time (ms) = "
-				<< backend_->getMinProcessingTime()
-				<< ", total processing call count = "
-				<< backend_->getTotalProcessingCount()
-				<< ", total max processing time (ms) = "
-				<< backend_->getTotalMaxProcessingTime());
+		//LOG_DEBUG("SnapshotRecorder: processing calls count = "
+		//		<< backend_->getProcessingCount()
+		//		<< ", average processing time (ms) = "
+		//		<< backend_->getAverageProcessingTime()
+		//		<< ", max processing time (ms) = "
+		//		<< backend_->getMaxProcessingTime()
+		//		<< ", min processing time (ms) = "
+		//		<< backend_->getMinProcessingTime()
+		//		<< ", total processing call count = "
+		//		<< backend_->getTotalProcessingCount()
+		//		<< ", total max processing time (ms) = "
+		//		<< backend_->getTotalMaxProcessingTime());
+		backend_->logProcessingTimes();
 		backend_->clearProcessingTime();
 		startWriting();
 	}
