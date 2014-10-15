@@ -5,6 +5,7 @@
 
 BIN_NAME     = radio-observer
 VERSION      = 0.4dev
+GIT_VERSION := $(shell git log -1 --pretty="%h %d")
 # yes / no
 IS_LIBRARY   = no
 
@@ -22,9 +23,9 @@ DOCS_ARCH    = $(BIN_NAME)-$(VERSION)-docs.html.tar.gz
 UNAME       := $(shell uname)
 # CXX          = clang++
 ifeq ($(CXX),g++)
-	CXXFLAGS     = -ggdb -O0 -Wall -Icppapp -rdynamic
+	CXXFLAGS     = -ggdb -O0 -Wall -Icppapp -rdynamic -DGIT_VERSION="\"$(GIT_VERSION)\""
 else
-	CXXFLAGS     = -ggdb -O0 -Wall -Icppapp
+	CXXFLAGS     = -ggdb -O0 -Wall -Icppapp -DGIT_VERSION="$(GIT_VERSION)"
 endif
 LDFLAGS      = -Lcppapp -lcppapp -lfftw3 -lcfitsio -lpthread
 ifeq ($(UNAME),Darwin)
@@ -38,7 +39,6 @@ ECHO         = $(shell which echo)
 
 
 build:
-	$(MAKE) src/git_version.h
 	$(MAKE) $(BIN_NAME)
 
 
@@ -47,7 +47,7 @@ build:
 
 clean:
 	@echo "========= CLEANING =================================================="
-	rm -f $(OBJECT_FILES) $(BIN_NAME) src/git_version.h
+	rm -f $(OBJECT_FILES) $(BIN_NAME)
 	$(MAKE) -C $(TESTS_DIR) clean
 	@echo
 
@@ -95,10 +95,6 @@ else
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 endif
 	@echo
-
-
-src/git_version.h:
-	git log -1 --pretty="#define GIT_VERSION \"%h %d\"" > $@
 
 
 .PHONY: all build clean rebuild deps test clean-deps docs clean-docs 
