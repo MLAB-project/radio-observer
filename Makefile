@@ -25,7 +25,7 @@ UNAME       := $(shell uname)
 ifeq ($(CXX),g++)
 	CXXFLAGS     = -ggdb -O0 -Wall -Icppapp -rdynamic -DGIT_VERSION="\"$(GIT_VERSION)\""
 else
-	CXXFLAGS     = -ggdb -O0 -Wall -Icppapp -DGIT_VERSION="$(GIT_VERSION)"
+	CXXFLAGS     = -ggdb -O0 -Wall -Icppapp -DGIT_VERSION="\"$(GIT_VERSION)\""
 endif
 LDFLAGS      = -Lcppapp -lcppapp -lfftw3 -lcfitsio -lpthread
 ifeq ($(UNAME),Darwin)
