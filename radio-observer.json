@@ -5,6 +5,10 @@
 			"file_name": "radio-observer.log",
 			"log_level": "debug",
 		},
+		{
+			"file_name": "-", // "-" stands for standard error output
+			"log_level": "warning",
+		},
 	],
 	
 	"jack_left_port":  "system:capture_1",      //  JACKd inputs

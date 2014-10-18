@@ -5,6 +5,7 @@
 
 BIN_NAME     = radio-observer
 VERSION      = 0.4dev
+GIT_VERSION := $(shell git log -1 --pretty="%h %d")
 # yes / no
 IS_LIBRARY   = no
 
@@ -22,9 +23,9 @@ DOCS_ARCH    = $(BIN_NAME)-$(VERSION)-docs.html.tar.gz
 UNAME       := $(shell uname)
 # CXX          = clang++
 ifeq ($(CXX),g++)
-	CXXFLAGS     = -ggdb -O0 -Wall -Icppapp -rdynamic
+	CXXFLAGS     = -ggdb -O0 -Wall -Icppapp -rdynamic -DGIT_VERSION="\"$(GIT_VERSION)\""
 else
-	CXXFLAGS     = -ggdb -O0 -Wall -Icppapp
+	CXXFLAGS     = -ggdb -O0 -Wall -Icppapp -DGIT_VERSION="\"$(GIT_VERSION)\""
 endif
 LDFLAGS      = -Lcppapp -lcppapp -lfftw3 -lcfitsio -lpthread
 ifeq ($(UNAME),Darwin)
@@ -37,7 +38,8 @@ endif
 ECHO         = $(shell which echo)
 
 
-build: $(BIN_NAME)
+build:
+	$(MAKE) $(BIN_NAME)
 
 
 -include $(DEP_FILES)
@@ -95,7 +97,7 @@ endif
 	@echo
 
 
-.PHONY: all build clean rebuild deps test clean-deps docs clean-docs
+.PHONY: all build clean rebuild deps test clean-deps docs clean-docs 
 
 
 %.d: %.cpp $(H_FILES)

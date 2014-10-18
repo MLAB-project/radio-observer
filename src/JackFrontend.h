@@ -53,6 +53,8 @@ private:
 	bool             midiMessageWaiting_;
 	Mutex            midiMutex_;
 
+	bool             isProcessing_;
+
 public:
 	/**
 	 * \brief Constructor.
@@ -65,7 +67,8 @@ public:
 		leftInputName_(leftInputName),
 		rightInputName_(rightInputName),
 		leftPort_(NULL),
-		rightPort_(NULL)
+		rightPort_(NULL),
+		isProcessing_(false)
 	{}
 	/**
 	 * \brief Destructor.

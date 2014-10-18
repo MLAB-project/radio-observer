@@ -14,6 +14,7 @@ using namespace cppapp;
 
 #include "Frontend.h"
 #include "Backend.h"
+#include "Agent.h"
 
 /**
  * \todo Write documentation for class Pipeline.
@@ -22,6 +23,8 @@ class Pipeline : public DIObject {
 private:
 	Ref<Frontend> frontend_;
 	Ref<Backend>  backend_;
+	
+	vector<Ref<Agent> > agents_;
 	
 	Pipeline(const Pipeline& other);
 	
@@ -40,6 +43,10 @@ public:
 	
 	Ref<Backend> getBackend() { return backend_; }
 	void setBackend(Ref<Backend> backend) { backend_ = backend; }
+	
+	void addAgent(Ref<Agent> agent) { 
+		agents_.push_back(agent);
+	}
 	
 	void run();
 	void stop();

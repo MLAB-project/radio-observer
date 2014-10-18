@@ -194,6 +194,8 @@ void FFTBackend::process(const vector<Complex> &data, DataInfo info)
 	assert(sizeof(Complex) == sizeof(in_[0]));
 	//assert(binOverlap_ <= (bins_ - binOverlap_));
 	
+	processingStopwatch_.start();
+	
 	int size = data.size();
 	const Complex *src = &(data[0]);
 	
@@ -230,7 +232,10 @@ void FFTBackend::process(const vector<Complex> &data, DataInfo info)
 		}
 		
 		// Execute FFT
+		stopwatch_.start();
 		fftw_execute(fftPlan_);
+		stopwatch_.end();
+		fftTime_.add(stopwatch_.getMilliseconds());
 		
 		// Copy the overlap back to the beginning of the window buffer.
 		memmove(window_, inEnd_ - binOverlap_, binOverlap_ * sizeof(in_[0]));
@@ -242,7 +247,10 @@ void FFTBackend::process(const vector<Complex> &data, DataInfo info)
 		src += count;
 		
 		// Pass the FFT data to the derived class.
+		stopwatch_.start();
 		processFFT(out_, bins_, info_, windowRaw_[0].mark);
+		stopwatch_.end();
+		analysisTime_.add(stopwatch_.getMilliseconds());
 		
 		timeOffset = timeOffset.addSamples(count, streamInfo_.sampleRate);
 		info_.offset++;
@@ -263,6 +271,11 @@ void FFTBackend::process(const vector<Complex> &data, DataInfo info)
 		
 		inMark_ += size;
 	}
+	
+	processingStopwatch_.end();
+	double ms = processingStopwatch_.getMilliseconds();
+	processingTime_.add(ms);
+	totalProcessingTime_.add(ms);
 }
 
 
