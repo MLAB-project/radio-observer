@@ -10,6 +10,8 @@
 #define METADATAAGENT_AEO607C1
 
 
+#include <cppapp/cppapp.h>
+
 #include "Agent.h"
 
 
@@ -21,14 +23,16 @@ enum MetadataTags {
 
 
 struct NoiseMetadata {
+	MetadataTags tag;
 };
 
 
 struct SnapshotMetadata {
+	MetadataTags tag;
 };
 
 
-struct MeteorMetadata {
+struct MeteorMetadata : public NoiseMetadata {
 };
 
 
@@ -40,10 +44,12 @@ private:
 	MetadataAgent(const MetadataAgent& other);
 
 	string fileName_;
+	
+	ByteChannel channel_;
 
 
 protected:
-	virtual void run() {}
+	virtual void run();
 
 
 public:
@@ -51,7 +57,7 @@ public:
 	 * Constructor.
 	 */
 	MetadataAgent() :
-		fileName_("metadata.csv")
+		fileName_("metadata.csv"), channel_(1024)
 	{}
 	/**
 	 * Destructor.

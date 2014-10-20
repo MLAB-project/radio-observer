@@ -139,7 +139,7 @@ void SnapshotRecorder::write(Snapshot snapshot)
 	
 	string fileName = "!";
 	//fileName += getFileName(time);
-	fileName += snapshot.fileName;
+	fileName += Path::join(outputDir_, snapshot.fileName);
 	
 	LOG_INFO("Writing snapshot \"" << (fileName.c_str() + 1) << "\"...");
 	

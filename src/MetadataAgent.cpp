@@ -9,6 +9,12 @@
 #include "MetadataAgent.h"
 
 
+void MetadataAgent::run()
+{
+	LOG_INFO("Metadata agent started. Thread " << Thread::getId() << ".");
+}
+
+
 //// DEPENDENCY INJECTION
 
 
