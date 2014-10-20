@@ -205,7 +205,7 @@ void SnapshotRecorder::writeRaw(Snapshot snapshot)
 	float fftSampleRate = backend_->getFFTSampleRate();
 	
 	string fileName = "!";
-	fileName += getFileName("raws", "fits", time);
+	fileName += Path::join(outputDir_, getFileName("raws", "fits", time));
 	
 	LOG_INFO("Writing raw snapshot \"" << (fileName.c_str() + 1) << "\"...");
 	
