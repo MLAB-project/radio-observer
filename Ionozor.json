@@ -1,0 +1,50 @@
+
+{
+	"logging": [
+		{
+			"file_name": "radio_iono.log",
+			"log_level": "debug",
+		},
+	],
+	
+	"jack_left_port":  "system:capture_1",
+	"jack_right_port": "system:capture_2",
+	
+	"configuration": "default",
+	
+	"configurations": [
+		{
+			"key":     "default",
+			"factory": "pipeline",
+			
+			"children": [
+				{
+					"key":     "backend",
+					"factory": "waterfall",
+					
+					"bins":    524288,
+					"overlap": 262144,
+					"buffer_chunk_size": 1048576,
+					"origin": "SVAKOV_iono_R0",
+					
+					"iq_gain":        0,
+					"iq_phase_shift": 0,
+					
+					"children": [
+						{
+							"key":     "recorder",
+							"factory": "snapshot",
+
+							"output_dir": "/home/odroid/Ionozor/ODROID3/snapshots/",
+							"output_type": "snap",
+							"snapshot_length": 400,
+							"low_freq":      10580,
+							"hi_freq":       10620,
+						},
+					],
+				},
+			],
+		},
+	],
+}
+
