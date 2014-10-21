@@ -3,8 +3,9 @@
 #
 
 
-BIN_NAME     = waterfall
-VERSION      = 0.2dev
+BIN_NAME     = radio-observer
+VERSION      = 0.4dev
+GIT_VERSION := $(shell git log -1 --pretty="%h %d")
 # yes / no
 IS_LIBRARY   = no
 
@@ -14,11 +15,18 @@ H_FILES      = $(shell ls $(SRC_DIR)/*.h)
 OBJECT_FILES = $(foreach CPP_FILE, $(CPP_FILES), $(patsubst %.cpp,%.o,$(CPP_FILE)))
 DEP_FILES    = $(foreach CPP_FILE, $(CPP_FILES), $(patsubst %.cpp,%.d,$(CPP_FILE)))
 
+TESTS_DIR    = tests
+TEST_BIN     = $(TESTS_DIR)/tests
+
 DOCS_ARCH    = $(BIN_NAME)-$(VERSION)-docs.html.tar.gz
 
 UNAME       := $(shell uname)
-CXXFLAGS     = -g -O0 -Wall -Icppapp $(shell python2.7-config --cflags)
-LDFLAGS      = -Lcppapp -lcppapp -lfftw3 -lcfitsio $(shell python2.7-config --ldflags)
+CXX          = clang++
+CXXFLAGS     = -std=c++11 -ggdb -O0 -Wall -Icppapp $(shell python2.7-config --includes) -DGIT_VERSION="\"$(GIT_VERSION)\""
+ifeq ($(CXX),g++)
+	CSSFLAGS += -rdynamic
+endif
+LDFLAGS      = -Lcppapp -lcppapp -lfftw3 -lcfitsio -lpthread $(shell python2.7-config --libs)
 ifeq ($(UNAME),Darwin)
 	LDFLAGS += -framework jackmp
 else
@@ -29,7 +37,8 @@ endif
 ECHO         = $(shell which echo)
 
 
-build: $(BIN_NAME)
+build:
+	$(MAKE) $(BIN_NAME)
 
 
 -include $(DEP_FILES)
@@ -38,6 +47,7 @@ build: $(BIN_NAME)
 clean:
 	@echo "========= CLEANING =================================================="
 	rm -f $(OBJECT_FILES) $(BIN_NAME)
+	$(MAKE) -C $(TESTS_DIR) clean
 	@echo
 
 
@@ -47,6 +57,11 @@ rebuild:
 
 
 deps: $(DEP_FILES)
+
+
+test: build
+	$(MAKE) -C $(TESTS_DIR)
+	$(TEST_BIN)
 
 
 clean-deps:
@@ -81,7 +96,7 @@ endif
 	@echo
 
 
-.PHONY: all build clean rebuild deps clean-deps docs clean-docs
+.PHONY: all build clean rebuild deps test clean-deps docs clean-docs 
 
 
 %.d: %.cpp $(H_FILES)

@@ -14,6 +14,9 @@
 #include "FITSWriter.h"
 #include "RingBuffer.h"
 #include "Channel.h"
+#include "BolidMessage.h"
+#include "CsvLog.h"
+#include "utils.h"
 
 #include <cmath>
 
@@ -26,156 +29,6 @@ using namespace std;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// WATERFALL BUFFER
-////////////////////////////////////////////////////////////////////////////////
-
-
-struct WaterfallBuffer {
-	/// Number of rows of the buffer (height).
-	int            size;
-	/// Width of a row.
-	int            bins;
-	vector<float>  data;
-	vector<WFTime> times;
-	
-	int            mark;
-	
-	WaterfallBuffer() :
-		size(0), bins(0), mark(0)
-	{}
-	
-	WaterfallBuffer(int size, int bins) :
-		size(size), bins(bins), mark(0)
-	{
-		resize(size, bins);
-	}
-	
-	/**
-	 * \brief Resize the buffer to the specified number of rows of specified
-	 *        width.
-	 *
-	 * Resizing the buffer also resets buffer's mark. This means that the
-	 * buffer is effectively erased and all data previously held by the buffer
-	 * is lost.
-	 *
-	 * \param size number of rows (height)
-	 * \param bins width of a row (width)
-	 */
-	void resize(int size, int bins)
-	{
-		assert(size >= 0);
-		assert(bins > 0);
-		
-		this->size = size;
-		this->bins = bins;
-		
-		data.resize(size * bins);
-		times.resize(size);
-		
-		rewind();
-	}
-	
-	/**
-	 * \brief Resize the buffer to fit within specified memory size.
-	 *
-	 * \param bins    width of a row
-	 * \param maxSize maximal memory size of the buffer
-	 * \returns       the resulting number of rows
-	 */
-	int autoResize(int bins, long maxSize)
-	{
-		int rows = maxSize / (bins * sizeof(float));
-		rows = (rows == 0) ? 1 : rows;
-		
-		resize(rows, bins);
-		
-		return rows;
-	}
-	
-	void rewind()
-	{
-		mark = 0;
-	}
-	
-	float* addRow(WFTime time)
-	{
-		times[mark] = time;
-		float *row = &(data[0]) + bins * mark;
-		mark++;
-		return row;
-	}
-	
-	float* getRow(int index)
-	{
-		assert(index >= 0);
-		assert(index < size);
-		
-		float *first = &(data[0]);
-		return first + bins * index;
-	}
-	
-	bool isFull() const
-	{
-		return mark >= size;
-	}
-	
-	/**
-	 * \brief Returns number of remaining row in the buffer.
-	 */
-	inline int remaining() const
-	{
-		return (size - mark);
-	}
-	
-	void swap(WaterfallBuffer &other)
-	{
-		int mark = this->mark;
-		this->mark = other.mark;
-		other.mark = mark;
-		
-		data.swap(other.data);
-		times.swap(other.times);
-	}
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
-// WATERFALL RECORDER
-////////////////////////////////////////////////////////////////////////////////
-
-
-class WaterfallRecorder : public Object {
-private:
-	typedef MethodThread<void, WaterfallRecorder> Thread;
-	
-	Thread          *workerThread_;
-	Mutex            mutex_;
-	Condition        condition_;
-	bool             exitWorkerThread_;
-	
-	WaterfallBuffer  inputBuffer_;
-	WaterfallBuffer  outputBuffer_;
-	
-	long             rowCount_;
-	long             currentRow_;
-	
-	FITSWriter       writer_;
-	
-	void* workerThreadMethod();
-
-public:
-	WaterfallRecorder();
-	virtual ~WaterfallRecorder();
-	
-	void   resize(int bins, long maxBufferSize);
-	
-	void   start();
-	void   stop();
-	float* addRow(WFTime time);
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
 // RECORDER
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -183,25 +36,54 @@ public:
 class WaterfallBackend;
 
 
-class Recorder : public Object {
+/**
+ * \brief Base class for FFT data recorders.
+ */
+class Recorder : public DIObject {
 protected:
-	Ref<WaterfallBackend>  backend_;
-	RingBuffer2D<float>   *buffer_;
-	Mutex                 *bufferMutex_;
+	Ref<WaterfallBackend>   backend_; ///< This recorder's backend.
+	RingBuffer2D<float>    *buffer_; ///< FFT data buffer to record from.
+	FFTBackend::IQBuffer   *rawBuffer_; ///< I/Q data buffer to record from.
+	Mutex                  *bufferMutex_; ///< Controls access to \ref buffer_.
+	vector<RawDataHandle>  *rawHandles_;
 	
 public:
-	Recorder(Ref<WaterfallBackend>  backend,
-		    RingBuffer2D<float>   *buffer,
-		    Mutex                 *bufferMutex) :
+	Recorder(Ref<WaterfallBackend>  backend):
 		backend_(backend),
-		buffer_(buffer),
-		bufferMutex_(bufferMutex)
+		buffer_(NULL),
+		rawBuffer_(NULL),
+		bufferMutex_(NULL),
+		rawHandles_(NULL)
 	{}
 	
 	virtual ~Recorder() {
 		backend_     = NULL;
 		buffer_      = NULL;
 		bufferMutex_ = NULL;
+	}
+	
+	void setBuffer(RingBuffer2D<float> *buffer,
+				FFTBackend::IQBuffer *rawBuffer,
+				Mutex *bufferMutex,
+				vector<RawDataHandle> *rawHandles)
+	{
+		buffer_      = buffer;
+		rawBuffer_   = rawBuffer;
+		bufferMutex_ = bufferMutex;
+		rawHandles_  = rawHandles;
+	}
+	
+	int getSampleRate();
+	int getFFTSampleRate();
+	
+	inline int fftMarkToRaw(int mark);
+	inline WFTime fftMarkToTime(int mark);
+	/**
+	 * \brief Converts number of FFT samples to number raw I/Q samples.
+	 */
+	inline int fftSamplesToRaw(int sampleCount)
+	{
+		return ((double)sampleCount / (double)getFFTSampleRate()) * (double)getSampleRate();
 	}
 	
 	virtual int requestBufferSize() { return 0; }
@@ -217,30 +99,55 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 
+/**
+ * \brief FFT data recorder which makes continuous snapshots of constants length.
+ */
 class SnapshotRecorder : public Recorder {
 protected:
+	/**
+	 * \brief Specifies a snapshot within \ref Recorder::buffer_ buffer.
+	 */
 	struct Snapshot {
-		int start;
-		int length;
+		int start; ///< Start position of the snapshot in \ref Recorder::buffer_ buffer.
+		int length; ///< Length of the snapshot in number of FFT rows.
 		
-		int reservation;
+		int reservation; ///< Handle of the buffer reservation. See \ref RingBuffer2D for more information.
+		
+		bool includeRawData;
+
+		string fileName;
 		
 		Snapshot() :
 			start(0), length(0),
-			reservation(-1)
+			reservation(-1),
+			includeRawData(false)
 		{}
-
+		
 		Snapshot(int start) :
 			start(start), length(0),
-			reservation(-1)
+			reservation(-1),
+			includeRawData(false)
 		{}
-
+		
+		/**
+		 * \brief Returns the end of the reservation.
+		 *
+		 * The end is computed as \c start + \c length.
+		 *
+		 * \returns the position in \ref WaterfallBackend buffer after the last
+		 *          row of this snapshot
+		 */
 		inline int end() const { return start + length; }
 	};
+	
+	string outputDir_; ///< Directory to store the resulting snapshot files in.
+	string outputType_; ///< Short string identifying the type of the output (snapshots/bolids).
+	bool   compressOutput_; ///< Output compressed file.
 	
 	int   snapshotLength_;
 	float leftFrequency_;
 	float rightFrequency_;
+	bool  writeUnfinished_;
 	
 	int      snapshotRows_;
 	int      leftBin_;
@@ -254,27 +161,58 @@ protected:
 	void*        threadMethod();
 	void         startWriting();
 	virtual void write(Snapshot snapshot);
+	virtual void writeRaw(Snapshot snapshot);
+	
+	bool        listenToNoise_;
+	float       noise_;
+	float       peakFrequency_;
+	float       magnitude_;
+	
+	static void processNoiseMessage(const NoiseMessage &msg, void *data);
+	
+	string getFileName(int mark);
 
 public:
 	SnapshotRecorder(Ref<WaterfallBackend>  backend,
-				  RingBuffer2D<float>   *buffer,
-				  Mutex                 *bufferMutex,
 				  int                    snapshotLength,
 				  float                  leftFrequency,
-				  float                  rightFrequency) :
-		Recorder(backend, buffer, bufferMutex),
+				  float                  rightFrequency,
+				  string                 outputDir,
+				  string                 outputType,
+				  bool                   compressOutput,
+				  bool                   listenToNoise) :
+		Recorder(backend),
+		outputDir_(outputDir),
+		outputType_(outputType),
+		compressOutput_(compressOutput),
 		snapshotLength_(snapshotLength),
 		leftFrequency_(leftFrequency),
-		rightFrequency_(rightFrequency)
-	{}
+		rightFrequency_(rightFrequency),
+		writeUnfinished_(true),
+		listenToNoise_(listenToNoise)
+	{
+		ORDER_PAIR(leftFrequency_, rightFrequency_);
+		
+		if (listenToNoise) {
+			addListener<NoiseMessage>(&SnapshotRecorder::processNoiseMessage, (void*)this);
+		}
+	}
 	
 	virtual ~SnapshotRecorder() {}
+	
+	virtual string getFileName(WFTime time);
+	virtual string getFileName(const char *typ, const char *ext, WFTime time);
+	virtual string getFileName(const string &typ, const string &origin, WFTime time);
+	
+	virtual string getFileBasename(const char *typ, const char *ext, const string &origin, WFTime time);
 	
 	virtual int requestBufferSize();
 	
 	virtual void start();
 	virtual void stop();
 	virtual void update();
+	
+	static Ref<DIObject> make(Ref<DynObject> config, Ref<DIObject> parent);
 };
 
 
@@ -284,77 +222,62 @@ public:
 
 
 /**
- * \todo Write documentation for class WaterfallBackend.
+ * \brief Represents a backend that calculates FFT from the input and records
+ *        the result through multiple recorders.
+ *
  */
 class WaterfallBackend : public FFTBackend {
+public:
+	typedef RingBuffer2D<float> FFTBuffer;
+
 private:
 	WaterfallBackend(const WaterfallBackend& other);
 	
-	string           origin_;
+	string                 origin_;
 	
-	/// Snapshot length in seconds (determines the size of the buffer).
-	//float            snapshotLength_;
-	
-	//WaterfallBuffer  inBuffer_;
-	//WaterfallBuffer  outBuffer_;
-	RingBuffer2D<float> buffer_;
-	Mutex               bufferMutex_;
+	FFTBuffer              buffer_;
+	int                    bufferChunkSize_;
+	Mutex                  bufferMutex_;
+	vector<RawDataHandle>  rawHandles_;
 	
 	vector<Ref<Recorder> > recorders_;
 	
-	//float            leftFrequency_;
-	//float            rightFrequency_;
-	//int              leftBin_;
-	//int              rightBin_;
-	//
-	//MethodThread<void, WaterfallBackend> *snapshotThread_;
-	//Mutex                                 mutex_;
-	//Condition                             snapshotCondition_;
-	//bool                                  endSnapshotThread_;
-	
-	//void writeHeader(fitsfile   *file,
-	//			  const char *keyword,
-	//			  int         type,
-	//			  void       *value,
-	//			  const char *comment,
-	//			  int        *status);
-	//void writeHeader(fitsfile   *file,
-	//			  const char *keyword,
-	//			  const char *value,
-	//			  const char *comment,
-	//			  int        *status);
-	//void writeHeader(fitsfile   *file,
-	//			  const char *keyword,
-	//			  float       value,
-	//			  const char *comment,
-	//			  int        *status);
-	//void writeHeader(fitsfile   *file,
-	//			  const char *keyword,
-	//			  int         value,
-	//			  const char *comment,
-	//			  int        *status);
-	
-	//void* snapshotThread();
-	//void  makeSnapshot();
-	//void  startSnapshot();
+	string                 metadataPath_;
+	Ref<CsvLog>            metadataFile_;
 
 protected:
-	virtual void processFFT(const fftw_complex *data, int size, DataInfo info);
+	virtual void processFFT(const fftw_complex *data, int size, DataInfo info, int rawMark);
 	
 public:
 	WaterfallBackend(int bins,
 				  int overlap,
-				  string origin,
-				  float snapshotLength,
-				  float leftFrequency,
-				  float rightFrequency);
+				  string origin);
 	virtual ~WaterfallBackend();
 	
 	string getOrigin() { return origin_; }
 	
+	void setMetadataPath(const string& path) { metadataPath_ = path; } 
+	Ref<CsvLog> getMetadataFile();
+	
+	int getBufferChunkSize() { return bufferChunkSize_; }
+	void setBufferChunkSize(int value) { bufferChunkSize_ = value; }
+	
+	void addRecorder(Ref<Recorder> recorder);
+	
 	virtual void startStream(StreamInfo info);
 	virtual void endStream();
+	
+	virtual bool injectDependency(Ref<DIObject> obj, std::string key);
+
+	static Ref<DIObject> make(Ref<DynObject> config, Ref<DIObject> parent);
+	
+	inline int fftSamplesToRaw(int sampleCount)
+	{
+		double sampleRate = getStreamInfo().sampleRate;
+		return ((double)sampleCount / (double)getFFTSampleRate()) * (double)sampleRate;
+	}
 };
+
 
 #endif /* end of include guard: WATERFALLBACKEND_YGIIIZR2 */
 

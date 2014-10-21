@@ -16,6 +16,87 @@ using namespace std;
 #include <cppapp/utils.h>
 
 
+////////////////////////////////////////////////////////////////////////////////
+// IQGainPhaseCorrection
+////////////////////////////////////////////////////////////////////////////////
+
+
+void IQGainPhaseCorrection::setGain(SampleType gain)
+{
+	gain_ = gain;
+}
+
+
+void IQGainPhaseCorrection::setPhaseShift(int phaseShift)
+{
+	phaseShift_ = phaseShift;
+	buffer_.resize(phaseShift);
+}
+
+
+/**
+ * \verbatim
+ * section                   |   I    |          II          |  III   |
+ * --------------------------+--------+----------------------+--------+
+ * inData (I)                |-- 1 ---|---------- 2 ---------|
+ * inData (Q)                         |---------- 3 ---------|-- 4 ---|
+ * buffer (Q)   |---- 5 -----|-- 6 ---|                      |        |
+ * --------------------------------------------------------------------
+ * outData (I)               |-- 1 ---|---------- 2 ---------|
+ * outData (Q)               |-- 6 ---|---------- 3 ---------|
+ * buffer  (Q)                                  |---- 3 -----|-- 4 ---|
+ * --------------------------+--------+--------------------------------
+ *                           |        |
+ *                           phase shift
+ * \endverbatim
+ */
+void IQGainPhaseCorrection::process(const Complex *inData,
+							 int            length,
+							 Complex       *outData)
+{
+	// Initialization
+	int remaining = length;
+	int offset    = 0;
+	
+	// Section I
+	int chunk = phaseShift_;
+	if (remaining < chunk) chunk = remaining;
+	remaining -= chunk;
+	offset    += chunk;
+	
+	int mark = buffer_.head() - phaseShift_;
+	
+	for (int i = 0; i < chunk; i++) {
+		outData[i].real = inData[i].real;
+		outData[i].imag = buffer_.at(mark + i) + gain_;
+	}
+	
+	// Section II
+	chunk = remaining - phaseShift_;
+	if (chunk > 0) {
+		for (int i = 0; i < chunk; i++) {
+			outData[offset + i].real = inData[offset + i].real;
+			outData[offset + i].imag = inData[i].imag + gain_;
+			buffer_.push(inData[i].imag);
+		}
+		remaining -= chunk;
+		offset    += chunk;
+	}
+	
+	// Section III
+	if (remaining > 0) {
+		for (int i = 0; i < remaining; i++) {
+			buffer_.push(inData[offset + i].imag);
+		}
+	}
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FFTBackend
+////////////////////////////////////////////////////////////////////////////////
+
+
 const double FFTBackend::PI = 4.0 * atan(1.0);
 
 
@@ -37,10 +118,12 @@ FFTBackend::FFTBackend(int bins, int overlap) :
 	in_ = (fftw_complex *) fftw_malloc(bufferSize_);
 	out_ = (fftw_complex *) fftw_malloc(bufferSize_);
 	fftPlan_ = fftw_plan_dft_1d(bins_, in_, out_, FFTW_FORWARD, FFTW_ESTIMATE);
-	
+
 	//inMark_ = in_ + binOverlap_;
 	inMark_ = window_;
 	inEnd_ = window_ + bins_;
+	
+	windowRaw_ = new RawDataHandle[bins_];
 }
 
 
@@ -52,6 +135,9 @@ FFTBackend::~FFTBackend()
 	fftw_free(window_);
 	fftw_free(in_);
 	fftw_free(out_);
+	
+	delete [] windowRaw_;
+	windowRaw_ = NULL;
 }
 
 
@@ -65,8 +151,6 @@ void FFTBackend::startStream(StreamInfo info)
 				   (float)(bins_ - binOverlap_));
 	
 	info_ = DataInfo();
-	
-	LOG_DEBUG("Starting FFT stream with time offset " << info.timeOffset << ", sample rate " << info.sampleRate << "Hz.");
 	
 	for (int i = 0; i < bins_; i++) {
 		//windowFn_[i] = sin(((float)i / (float)bufferSize_) * PI);
@@ -98,7 +182,10 @@ void FFTBackend::startStream(StreamInfo info)
 				(float)(bins_ - 1)
 			)
 		);
+		CPPAPP_ASSERT(windowFn_[i] <= 1.0);
 	}
+	
+	LOG_DEBUG("Starting FFT stream with time offset " << info.timeOffset << ", sample rate " << info.sampleRate << "Hz.");
 }
 
 
@@ -107,39 +194,88 @@ void FFTBackend::process(const vector<Complex> &data, DataInfo info)
 	assert(sizeof(Complex) == sizeof(in_[0]));
 	//assert(binOverlap_ <= (bins_ - binOverlap_));
 	
+	processingStopwatch_.start();
+	
 	int size = data.size();
 	const Complex *src = &(data[0]);
 	
-	info_.timeOffset = info.timeOffset;
+	//for (int i = 0; i < size; i++) {
+	//	int16_t *row = rawBuffer_.push();
+	//	row[0] = (int16_t)(src[i].real * 0x7fff);
+	//	row[1] = (int16_t)(src[i].imag * 0x7fff);
+	//}
 	
+	WFTime timeOffset = info.timeOffset;
+	
+	// Loop while there is enough remaining data for another FFT window.
 	while (size >= (inEnd_ - inMark_)) {
 		int count = inEnd_ - inMark_;
 		
-		memcpy(inMark_, src, count * sizeof(in_[0]));
+		// Copy the incoming data to the window buffer
+		//memcpy(inMark_, src, count * sizeof(in_[0]));
+		correction_.process(src, count, (Complex*)inMark_);
+		for (int i = 0; i < count; i++) {
+			floatToInt(src[i], rawBuffer_.push());
+			windowRaw_[inMark_ - window_ + i] = RawDataHandle(
+				rawBuffer_.mark(),
+				timeOffset.addSamples(i, streamInfo_.sampleRate)
+			);
+		}
 		
+		info_.timeOffset = windowRaw_[0].time;
+		
+		// From the window buffer, copy the data to the FFT input buffer, aplying
+		// the window function
 		for (int i = 0; i < bins_; i++) {
 			in_[i][0] = window_[i][0] * windowFn_[i];
 			in_[i][1] = window_[i][1] * windowFn_[i];
 		}
 		
+		// Execute FFT
+		stopwatch_.start();
 		fftw_execute(fftPlan_);
-		memmove(window_, inEnd_ - binOverlap_, binOverlap_ * sizeof(in_[0]));
+		stopwatch_.end();
+		fftTime_.add(stopwatch_.getMilliseconds());
 		
+		// Copy the overlap back to the beginning of the window buffer.
+		memmove(window_, inEnd_ - binOverlap_, binOverlap_ * sizeof(in_[0]));
+		memmove(windowRaw_, windowRaw_ + bins_ - binOverlap_, binOverlap_ * sizeof(windowRaw_[0]));
+		
+		// Update variables to keep track of the remaining data/work.
 		inMark_ = window_ + binOverlap_;
 		size -= count;
 		src += count;
 		
-		processFFT(out_, bins_, info_);
+		// Pass the FFT data to the derived class.
+		stopwatch_.start();
+		processFFT(out_, bins_, info_, windowRaw_[0].mark);
+		stopwatch_.end();
+		analysisTime_.add(stopwatch_.getMilliseconds());
 		
+		timeOffset = timeOffset.addSamples(count, streamInfo_.sampleRate);
 		info_.offset++;
-		info_.timeOffset = info_.timeOffset.addSamples(count, streamInfo_.sampleRate);
-		//LOG_DEBUG("offset = " << info_.timeOffset << ", count = " << count << ", sr = " << streamInfo_.sampleRate);
 	}
 	
+	// If there are any remaining I/Q samples (but not enough for a complete
+	// window, copy them to the window buffer and move the mark.
 	if (size > 0) {
-		memcpy(inMark_, src, size * sizeof(in_[0]));
+		//memcpy(inMark_, src, size * sizeof(in_[0]));
+		correction_.process(src, size, (Complex*)inMark_);
+		for (int i = 0; i < size; i++) {
+			floatToInt(src[i], rawBuffer_.push());
+			windowRaw_[inMark_ - window_ + i] = RawDataHandle(
+				rawBuffer_.mark(),
+				timeOffset.addSamples(i, streamInfo_.sampleRate)
+			);
+		}
+		
 		inMark_ += size;
 	}
+	
+	processingStopwatch_.end();
+	double ms = processingStopwatch_.getMilliseconds();
+	processingTime_.add(ms);
+	totalProcessingTime_.add(ms);
 }
 
 

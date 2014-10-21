@@ -11,38 +11,48 @@
 
 #include <cppapp/AppBase.h>
 #include <cppapp/Input.h>
+#include <cppapp/DynObject.h>
 
 using namespace cppapp;
 
-// TODO: Remove later.
+#include "config.h"
+#include "Pipeline.h"
 #include "WAVStream.h"
 #include "JackFrontend.h"
 #include "WaterfallBackend.h"
 #include "Signal.h"
 
 
+#define EXIT_TERM_RECEIVED 1
+#define EXIT_NO_CONFIG     2
+#define EXIT_INIT_FAILED   3
+
+
 /**
- * \todo Write documentation for class App.
+ * \brief Represents the application and its entry point.
  */
 class App : public AppBase {
 private:
-	// Ref<Input> input_;
+	Ref<DynObject> config_;
 	
 	App(const App& other);
 
 protected:
-	// inline Ref<Input> input() { return input_; }
+	virtual string getDefaultConfigFile();
+	virtual void   readConfig();
 	
-	Ref<Frontend> frontend_;
-	Ref<Backend>  backend_;
+	Ref<Pipeline> pipeline_;
+	//Ref<Frontend> frontend_;
+	//Ref<Backend>  backend_;
 	
 	Ref<Frontend> createFrontend();
-	Ref<Backend>  createBackend();
+	// Ref<Backend>  createBackend();
 	
 	virtual void setUp();
 	virtual int onRun();
 	
 	void interruptHandler(int sigNum);
+	void termHandler(int sigNum);
 
 public:
 	App();

@@ -1,0 +1,79 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+"""fileinfo module.
+
+Author: Jan Milik <milikjan@fit.cvut.cz>
+"""
+
+
+import os
+import sys
+import struct
+
+
+def show_file_info(file_name):
+    stat = os.stat(file_name)
+    print "Filename: %s" % (file_name, )
+    print "File size: %d B" % (stat.st_size, )
+    
+    if file_name.endswith(".wav"):
+        show_wav_info(file_name)
+
+
+def show_wav_info(file_name):
+    with open(file_name, "rb") as f:
+        data = f.read()
+        
+        # print repr(struct.unpack("<4sI4s4sI", data[:20]))
+        
+        riff_chunk_id = struct.unpack("<4s", data[:4])[0]
+        if riff_chunk_id <> "RIFF":
+            print "ERROR: Invalid RIFF chunk id (%r)." % (riff_chunk_id, )
+            return
+        
+        chunk_size = struct.unpack("<I", data[4:8])[0]
+        
+        wave_id = struct.unpack("<4s", data[8:12])[0]
+        if wave_id <> "WAVE":
+            print "ERROR: Invalid WAVE ID."
+            return
+        
+        offset = 12
+        while offset - 8 < chunk_size:
+            subchunk_id, subchunk_size = struct.unpack("<4sI", data[offset:offset + 8])
+            offset += 8
+            if subchunk_id <> "fmt ":
+                offset += subchunk_size
+                continue
+            fmt, num_channels, sample_rate, byte_rate, block_align, bits_per_sample = struct.unpack("<HHIIHH", data[offset:offset + 16])
+            
+            fmt_name = {
+                0x0001: "PCM",
+                0x0003: "IEEE FLOAT",
+                0x0006: "ALAW",
+                0x0007: "MULAW",
+                0xfffe: "EXTENSIBLE",
+            }.get(fmt, None)
+            
+            if fmt_name is None:
+                print "Format: %d" % (fmt, )
+            else:
+                print "Format: %s (%d)" % (fmt_name, fmt, )
+            
+            print "Number of channels: %d" % (num_channels, )
+            print "Sample rate: %d" % (sample_rate, )
+            print "Byte rate: %d" % (byte_rate, )
+            print "Block align: %d" % (block_align, )
+            print "Bits per sample: %d" % (bits_per_sample, )
+            return
+
+
+def main():
+    for arg in sys.argv[1:]:
+        show_file_info(arg)
+
+
+if __name__ == "__main__":
+    main()
+
+

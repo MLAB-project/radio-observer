@@ -1,8 +1,16 @@
 *.swp
+*~
 
 *.d
 *.o
+radio-observer
+radio-observer-*-docs.html.tar.gz
+docs
+
+*.pyc
 
 *.fits
 *.wav
 *.png
+*.bak
+*.log

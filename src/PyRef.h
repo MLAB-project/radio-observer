@@ -138,6 +138,8 @@ class PyExtModule {
 private:
 	static const PyMethodDef SENTINEL;
 	
+	bool                 initialized_;
+	
 	const char          *name_;
 	//PyRef                module_;
 	PyObject            *module_;
@@ -158,7 +160,7 @@ protected:
 
 public:
 	PyExtModule(const char *name) :
-		name_(name)
+		initialized_(false), name_(name)
 	{
 		methods_.push_back(SENTINEL);
 	}
@@ -168,7 +170,10 @@ public:
 	
 	void init()
 	{
-		methods_.push_back(SENTINEL);
+		if (initialized_) return;
+		initialized_ = true;
+		
+		//methods_.push_back(SENTINEL);
 		
 		module_ = Py_InitModule(getName(), &(methods_[0]));
 	}

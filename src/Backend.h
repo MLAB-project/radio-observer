@@ -19,7 +19,10 @@ using namespace cppapp;
 
 #include "WFTime.h"
 
-//typedef double Complex[2];
+
+/**
+ * \brief Complex number.
+ */
 struct Complex {
 	double real;
 	double imag;
@@ -48,6 +51,11 @@ struct StreamInfo {
 		
 		timeOffset = WFTime(0, 0);
 	}
+
+	double samplesToTime(int samples)
+	{
+		return (double)samples / (double)sampleRate;
+	}
 };
 
 
@@ -56,10 +64,10 @@ struct StreamInfo {
  */
 struct DataInfo {
 	/// Position of the first sample of the batch from the beginning of the stream.
-	long   offset;
+	SampleCount offset;
 	
 	/// Time offset of the first sample of the batch relative to the stream time offset.
-	WFTime timeOffset;
+	WFTime      timeOffset;
 	
 	DataInfo()
 	{
@@ -70,12 +78,12 @@ struct DataInfo {
 
 
 /**
- * \todo Write documentation for class Backend.
+ * \brief Base class for backend that take I/Q data and process them.
  */
-class Backend : public Object {
+class Backend : public DIObject {
 private:
 	Backend(const Backend& other);
-
+	
 protected:
 	StreamInfo streamInfo_;
 	

@@ -1,0 +1,82 @@
+
+{
+	"logging": [
+		{
+			"file_name": "radio-observer.log",
+			"log_level": "debug",
+		},
+		{
+			"file_name": "-", // "-" stands for standard error output
+			"log_level": "warning",
+		},
+	],
+	
+	"jack_left_port":  "system:capture_1",      //  JACKd inputs
+	"jack_right_port": "system:capture_2",
+	
+	"configuration": "default",         // name of configuration which will be selected from following list
+	
+	"configurations": [
+		{
+			"key":     "default",       //  configuration identifier
+			"factory": "pipeline",
+			
+			"children": [
+				{
+					"key":     "backend",
+					"factory": "waterfall", // waterfall data will be processed
+					
+					"bins":    32768,       // number of bins used in FFT calculation
+					"overlap": 24576,       // number of ovelaping samples from previous FFT window
+
+					
+					// Chunk size of the FFT buffer - this changes the size of the
+					// largest continuous block of memory allocated by the backend.
+					// Try a smaller value if the program crashes with memory allocation
+					// exception.
+					// 1048576 = 1024 * 1024
+					"buffer_chunk_size": 1048576, 
+					
+					"origin": "debug",      // name of detection station 
+					
+					"iq_gain":        0,    // I/Q correction paremeters currently have not effect
+					"iq_phase_shift": 0,
+					
+					"metadata_path":  "./data", // path to metadata output directory
+					"children": [
+						{
+							"key":     "recorder",      // indentification of method which will procces FFT output
+							"factory": "snapshot",      // method which creates continuous snapshots in eqidistant intervals
+
+							"output_dir": ".",          // absolute path  to data output directory
+							"output_type": "snap",      // data output idetifier (this string will be used in file name)
+							
+							"snapshot_length": 60,      // length of snapshot in seconds. 
+							"low_freq":      10100,      // low (left) snapshot frequency
+							"hi_freq":       11000,      // high (rigth image border) snaphot frequency
+						},
+						{
+							"key":     "recorder",      // inedentification of meteor detector recording.
+							"factory": "bolid",
+							
+							"output_dir": "./snapshots",          // absolute path  to data output directory
+							"output_type": "snap",      // data output idetifier (this string will be used in file name)
+							"advance_time":     2,      // time interval of data recorded before detection is triggered
+							"jitter_time":      5,      // maximal time interval between two separate detection classified as same detection.
+
+							"low_detect_freq": 10300,   // low  frequency meteor detection border
+							"hi_detect_freq":  10900,   // high frequency meteor detection border (in spectrogram)
+							"low_noise_freq":   9000,   // low border for spectral frequency intensity reference
+							"hi_noise_freq":    9600,   // high border for spectral frequency intensity reference
+							
+							// time interval between noise entries in the metadata
+							// file (seconds), default is 1 hour (3600 seconds)
+							"noise_metadata_time": 3600,
+						},
+					],
+				},
+			],
+		},
+	],
+}
+

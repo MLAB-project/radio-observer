@@ -9,12 +9,24 @@
 #ifndef JACKFRONTEND_J2RTK7C1
 #define JACKFRONTEND_J2RTK7C1
 
+
 #include "Frontend.h"
+#include "MessageDispatch.h"
+#include "BolidMessage.h"
+
+#include <string>
+#include <deque>
+using namespace std;
+
+#include <cppapp/cppapp.h>
+using namespace cppapp;
 
 #include <jack/jack.h>
+#include <jack/midiport.h>
+
 
 /**
- * \todo Write documentation for class JackFrontend.
+ * \brief Frontend class that reads sound data from JACK server.
  */
 class JackFrontend : public Frontend {
 private:
@@ -26,31 +38,76 @@ private:
 	static int  onJackInput(jack_nframes_t nframes, void *arg);
 	static void onJackShutdown(void *arg);
 	
-	const char *leftInputName_;
-	const char *rightInputName_;
+	bool        connect_;
+	string      clientName_;
+	string      leftInputName_;
+	string      rightInputName_;
 	
 	jack_port_t *leftPort_;
 	jack_port_t *rightPort_;
 	
 	vector<Complex> outputBuffer_;
+	
+	jack_port_t     *midiPort_;
+	deque<string*>   midiQueue_;
+	bool             midiMessageWaiting_;
+	Mutex            midiMutex_;
+
+	bool             isProcessing_;
 
 public:
 	/**
-	 * Constructor.
+	 * \brief Constructor.
 	 */
-	JackFrontend(const char *leftInputName, const char *rightInputName) :
-		leftInputName_((leftInputName == NULL) ? "system:capture_1" : leftInputName),
-		rightInputName_((rightInputName == NULL) ? "system:capture_2" : rightInputName),
+	JackFrontend(bool connect, string clientName, string leftInputName, string rightInputName) :
+		connect_(connect),
+		clientName_(clientName),
+		//leftInputName_((leftInputName == NULL) ? "system:capture_1" : leftInputName),
+		//rightInputName_((rightInputName == NULL) ? "system:capture_2" : rightInputName),
+		leftInputName_(leftInputName),
+		rightInputName_(rightInputName),
 		leftPort_(NULL),
-		rightPort_(NULL)
+		rightPort_(NULL),
+		isProcessing_(false)
 	{}
 	/**
-	 * Destructor.
+	 * \brief Destructor.
 	 */
 	virtual ~JackFrontend() {}
 	
 	virtual void run();
+	
+	virtual void sendMessage(const char *msg, size_t length);
+	
+	void sendMidiMessage(const char *msg, size_t length);
 };
+
+
+class BolidMessageListener : public MessageListener<BolidMessage> {
+private:
+	Ref<JackFrontend> frontend_;
+
+public:
+	BolidMessageListener(Ref<JackFrontend> frontend) :
+		frontend_(frontend)
+	{ }
+	
+	virtual void sendMessage(const BolidMessage &msg);
+};
+
+
+class HeartBeatMessageListener : public MessageListener<HeartBeatMessage> {
+private:
+	Ref<JackFrontend> frontend_;
+
+public:
+	HeartBeatMessageListener(Ref<JackFrontend> frontend) :
+		frontend_(frontend)
+	{ }
+	
+	virtual void sendMessage(const HeartBeatMessage &msg);
+};
+
 
 #endif /* end of include guard: JACKFRONTEND_J2RTK7C1 */
 

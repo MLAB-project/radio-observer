@@ -16,7 +16,7 @@ using namespace cppapp;
 #include "Backend.h"
 
 /**
- * \todo Write documentation for class Frontend.
+ * \brief Base class for frontends that act as streams of I/Q data.
  */
 class Frontend : public Object {
 private:
@@ -43,6 +43,10 @@ public:
 	virtual void run() = 0;
 	
 	virtual void stop();
+	
+	virtual void sendMessage(const char *msg, size_t length);
+	
+	virtual void sendMessage(const char *msgType, const char *msgData, size_t dataLength);
 };
 
 #endif /* end of include guard: FRONTEND_OBVGMG1U */
