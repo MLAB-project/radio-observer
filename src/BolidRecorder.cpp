@@ -164,7 +164,7 @@ void BolidRecorder::update()
 		lastNoiseMetadataEntry_ = buffer_->mark();
 		
 		NoiseMessage msg(WFTime::now(), n, peakFq, a);
-		MessageDispatch<NoiseMessage>::getInstance().sendMessage(msg);
+		sendMessage(msg);
 	}
 	
 	switch (state_) {
@@ -232,7 +232,7 @@ void BolidRecorder::update()
 					<< duration
 				);
 				
-				MessageDispatch<BolidMessage>::getInstance().sendMessage(BolidMessage(
+				sendMessage(BolidMessage(
 					t,
 					noise_,
 					peakFreq_,

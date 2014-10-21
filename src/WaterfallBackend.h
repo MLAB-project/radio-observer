@@ -14,6 +14,7 @@
 #include "FITSWriter.h"
 #include "RingBuffer.h"
 #include "Channel.h"
+#include "BolidMessage.h"
 #include "CsvLog.h"
 #include "utils.h"
 
@@ -162,6 +163,13 @@ protected:
 	virtual void write(Snapshot snapshot);
 	virtual void writeRaw(Snapshot snapshot);
 	
+	bool        listenToNoise_;
+	float       noise_;
+	float       peakFrequency_;
+	float       magnitude_;
+	
+	static void processNoiseMessage(const NoiseMessage &msg, void *data);
+	
 	string getFileName(int mark);
 
 public:
@@ -171,7 +179,8 @@ public:
 				  float                  rightFrequency,
 				  string                 outputDir,
 				  string                 outputType,
-				  bool                   compressOutput) :
+				  bool                   compressOutput,
+				  bool                   listenToNoise) :
 		Recorder(backend),
 		outputDir_(outputDir),
 		outputType_(outputType),
@@ -179,9 +188,14 @@ public:
 		snapshotLength_(snapshotLength),
 		leftFrequency_(leftFrequency),
 		rightFrequency_(rightFrequency),
-		writeUnfinished_(true)
+		writeUnfinished_(true),
+		listenToNoise_(listenToNoise)
 	{
 		ORDER_PAIR(leftFrequency_, rightFrequency_);
+		
+		if (listenToNoise) {
+			addListener<NoiseMessage>(&SnapshotRecorder::processNoiseMessage, (void*)this);
+		}
 	}
 	
 	virtual ~SnapshotRecorder() {}

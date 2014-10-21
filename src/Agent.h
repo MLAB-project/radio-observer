@@ -22,12 +22,29 @@ private:
 	Thread *thread_;
 
 	void* internalRun() {
+		LOG_INFO("Agent " << getName() << " (" << this << ") started. Thread " << Thread::getId() << ".");
+		
 		this->run();
+		
+		LOG_INFO("Agent " << getName() << " (" << this << ") stopped. Thread " << Thread::getId() << ".");
+		
 		return NULL;
 	}
 
 protected:
-	virtual void run() = 0;
+	Thread* getThread() { return thread_; }
+	
+	virtual void run() {
+		while (!getThread()->isStopRequested()) {
+			if (!runCycle()) {
+				break;
+			}
+		}
+	}
+	
+	virtual bool runCycle() { return false; }
+	
+	virtual void onStopRequested() { }
 
 public:
 	/**
@@ -51,6 +68,7 @@ public:
 		if (thread_ != NULL) {
 			thread_->requestStop();
 		}
+		onStopRequested();
 	}
 	
 	virtual void join() {

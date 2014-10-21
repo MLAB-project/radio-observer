@@ -119,7 +119,7 @@ public:
 	/**
 	 * \brief Constructor.
 	 */
-	BolidRecorder();
+	//BolidRecorder();
 	/**
 	 * \brief Constructor.
 	 */
@@ -140,7 +140,7 @@ public:
 			    float                  threshold,
 			    double                 noiseMetadataTime) :
 			    //string                 metadataPath) :
-		SnapshotRecorder(backend, snapshotLength, leftFrequency, rightFrequency, outputDir, outputType, compressOutput),
+		SnapshotRecorder(backend, snapshotLength, leftFrequency, rightFrequency, outputDir, outputType, compressOutput, false),
 		minNoiseFq_(minNoiseFq),
 		maxNoiseFq_(maxNoiseFq),
 		lowNoiseBin_(0),

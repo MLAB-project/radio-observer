@@ -13,6 +13,7 @@
 #include <cppapp/cppapp.h>
 
 #include "Agent.h"
+#include "WFTime.h"
 
 
 enum MetadataTags {
@@ -24,6 +25,11 @@ enum MetadataTags {
 
 struct NoiseMetadata {
 	MetadataTags tag;
+	
+	WFTime time;
+	float  noise;
+	float  peakFrequency;
+	float  magnitude;
 };
 
 
@@ -33,6 +39,11 @@ struct SnapshotMetadata {
 
 
 struct MeteorMetadata : public NoiseMetadata {
+	float minFreq;
+	float maxFreq;
+	
+	int startSample;
+	int endSample;
 };
 
 
@@ -45,11 +56,18 @@ private:
 
 	string fileName_;
 	
+	Ref<Output> output_;
 	ByteChannel channel_;
 
 
 protected:
-	virtual void run();
+	virtual bool runCycle();
+	
+	static void processMessage(MemBlock buffer, void *data);
+	
+	void processMessage(NoiseMetadata *msg);
+	void processMessage(SnapshotMetadata *msg);
+	void processMessage(MeteorMetadata *msg);
 
 
 public:

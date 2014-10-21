@@ -28,16 +28,30 @@ template<class T>
 class FunctionMessageListener : public MessageListener<T> {
 public:
 	typedef void (*Function)(const T &msg);
+	typedef void (*DataFunction)(const T &msg, void *data);
 
 private:
-	Function fn_;
+	Function      fn_;
+	
+	DataFunction  dataFn_;
+	void         *data_;
 
 public:
-	FunctionMessageListener(Function fn) : fn_(fn) {}
+	FunctionMessageListener(Function fn) :
+		fn_(fn), dataFn_(NULL), data_(NULL)
+	{}
+	
+	FunctionMessageListener(DataFunction fn, void *data) :
+		fn_(NULL), dataFn_(fn), data_(data)
+	{}
 	
 	virtual void sendMessage(const T &msg)
 	{
-		fn_(msg);
+		if (fn_ == NULL) {
+			dataFn_(msg, data_);
+		} else {
+			fn_(msg);
+		}
 	}
 };
 
@@ -103,6 +117,11 @@ public:
 		addListener(new FunctionMessageListener<T>(fn));
 	}
 	
+	void addListener(typename FunctionMessageListener<T>::DataFunction fn, void *data)
+	{
+		addListener(new FunctionMessageListener<T>(fn, data));
+	}
+	
 	static MessageDispatch<T>& getInstance()
 	{
 		static MessageDispatch<T> instance;
@@ -121,6 +140,20 @@ struct Message {
 		MessageDispatch<T>::getInstance().sendMessage(*this);
 	}
 };
+
+
+template<class T>
+void addListener(typename FunctionMessageListener<T>::DataFunction fn, void *data)
+{
+	MessageDispatch<T>::getInstance().addListener(fn, data);
+}
+
+
+template<class T>
+void sendMessage(const T &msg)
+{
+	MessageDispatch<T>::getInstance().sendMessage(msg);
+}
 
 
 class DynMessage {

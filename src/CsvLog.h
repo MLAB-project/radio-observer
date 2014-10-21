@@ -59,10 +59,10 @@ public:
 
 #define CSV_LOG_ENTRY(log, time, entry) { \
 	WFTime t__ = (time); \
-	std::stringstream buffer; \
-	(buffer << entry); \
-	buffer.flush(); \
-	(log)->write(t__, buffer.str()); \
+	std::stringstream buffer__; \
+	(buffer__ << entry); \
+	buffer__.flush(); \
+	(log)->write(t__, buffer__.str()); \
 }
 
 

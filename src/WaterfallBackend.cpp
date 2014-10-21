@@ -143,6 +143,18 @@ void SnapshotRecorder::write(Snapshot snapshot)
 	
 	LOG_INFO("Writing snapshot \"" << (fileName.c_str() + 1) << "\"...");
 	
+	if (listenToNoise_) {
+		CSV_LOG_ENTRY(
+			backend_->getMetadataFile(), 
+			time,
+			Path::basename(nextSnapshot_.fileName) << ";"
+				<< noise_ << ";"
+				<< peakFrequency_ << ";"
+				<< magnitude_ << ";"
+				<< 0
+		);
+	}
+	
 	FITSWriter w;
 	
 	if (compressOutput_)
@@ -246,6 +258,16 @@ void SnapshotRecorder::writeRaw(Snapshot snapshot)
 	w.close();
 	
 	LOG_DEBUG("Finished writing raw snapshot.");
+}
+
+
+void SnapshotRecorder::processNoiseMessage(const NoiseMessage &msg, void *data)
+{
+	SnapshotRecorder *self = (SnapshotRecorder*)data;
+	
+	self->noise_         = msg.noise;
+	self->peakFrequency_ = msg.peakFrequency;
+	self->magnitude_     = msg.magnitude;
 }
 
 
@@ -434,7 +456,8 @@ Ref<DIObject> SnapshotRecorder::make(Ref<DynObject> config, Ref<DIObject> parent
 		rightFrequency,
 		outputDir,
 		outputType,
-		compressOutput
+		compressOutput,
+		true
 	);
 }
 
