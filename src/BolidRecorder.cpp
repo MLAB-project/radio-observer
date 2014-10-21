@@ -130,42 +130,43 @@ void BolidRecorder::update()
 		row + lowDetectBin_ + p - averageBinRange_ / 2,
 		averageBinRange_
 	);
+	float peakFq = backend_->binToFrequency(lowDetectBin_ + p);
 	
 	bool detect = (a > (n * 2.0));
 	
-	if (buffer_->size(lastNoiseMetadataEntry_) >= noiseMetadataRows_) {
-		//WFTime t = WFTime::now();
-		//Ref<Output> metaf = getMetadataFile(
-		//	t,
-		//	"file name; noise; peak f; mag.; duration");
-		//
-		float peakFq = backend_->binToFrequency(lowDetectBin_ + p);
-		//
-		LOG_INFO("Noise: " << n << "  Peak frequency: " << peakFq << "  Magnitude: " << a);
-		//
-		//(*metaf->getStream())
-		//	//<< Path::basename(nextSnapshot_.fileName)
-		//	<< ";" << n
-		//	<< ";" << peakFq
-		//	<< ";" << a
-		//	<< ";" << 0
-		//	<< std::endl;
-		//metaf->getStream()->flush();
-		//METADATA_ENTRY(";" << n << ";" << peakFq << ";" << a << ";" << 0);
-		CSV_LOG_ENTRY(
-			backend_->getMetadataFile(),
-			//metadataFile_, 
-			WFTime::now(), 
-			";"
-			<< n << ";"
-			<< peakFq << ";"
-			<< a << ";"
-			<< 0);
-		lastNoiseMetadataEntry_ = buffer_->mark();
-		
-		NoiseMessage msg(WFTime::now(), n, peakFq, a);
-		sendMessage(msg);
-	}
+	NoiseMessage msg(WFTime::now(), n, peakFq, a);
+	sendMessage(msg);
+	
+	//if (buffer_->size(lastNoiseMetadataEntry_) >= noiseMetadataRows_) {
+	//	//WFTime t = WFTime::now();
+	//	//Ref<Output> metaf = getMetadataFile(
+	//	//	t,
+	//	//	"file name; noise; peak f; mag.; duration");
+	//	//
+	//	float peakFq = backend_->binToFrequency(lowDetectBin_ + p);
+	//	//
+	//	LOG_INFO("Noise: " << n << "  Peak frequency: " << peakFq << "  Magnitude: " << a);
+	//	//
+	//	//(*metaf->getStream())
+	//	//	//<< Path::basename(nextSnapshot_.fileName)
+	//	//	<< ";" << n
+	//	//	<< ";" << peakFq
+	//	//	<< ";" << a
+	//	//	<< ";" << 0
+	//	//	<< std::endl;
+	//	//metaf->getStream()->flush();
+	//	//METADATA_ENTRY(";" << n << ";" << peakFq << ";" << a << ";" << 0);
+	//	CSV_LOG_ENTRY(
+	//		backend_->getMetadataFile(),
+	//		//metadataFile_, 
+	//		WFTime::now(), 
+	//		";"
+	//		<< n << ";"
+	//		<< peakFq << ";"
+	//		<< a << ";"
+	//		<< 0);
+	//	lastNoiseMetadataEntry_ = buffer_->mark();
+	//}
 	
 	switch (state_) {
 	case STATE_INIT:
