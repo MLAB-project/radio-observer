@@ -42,6 +42,7 @@
 					"iq_gain":        0,    // I/Q correction paremeters currently have not effect
 					"iq_phase_shift": 0,
 					
+					"metadata_path":  "./data", // path to metadata output directory
 					"children": [
 						{
 							"key":     "recorder",      // indentification of method which will procces FFT output
@@ -60,7 +61,6 @@
 							
 							"output_dir": "./snapshots",          // absolute path  to data output directory
 							"output_type": "snap",      // data output idetifier (this string will be used in file name)
-							"metadata_path": "./data",       // absolute path  to data output directory
 							"advance_time":     2,      // time interval of data recorded before detection is triggered
 							"jitter_time":      5,      // maximal time interval between two separate detection classified as same detection.
 
