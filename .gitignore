@@ -3,8 +3,8 @@
 
 *.d
 *.o
-waterfall
-waterfall-*-docs.html.tar.gz
+radio-observer
+radio-observer-*-docs.html.tar.gz
 docs
 
 *.pyc
@@ -13,3 +13,4 @@ docs
 *.wav
 *.png
 *.bak
+*.log
