@@ -13,8 +13,10 @@ Ref<Output> CsvLog::getOutput(WFTime time)
 {
 	string fileName = getFileName(time);
 	if (output_.isNull() || fileName != output_->getName()) {
+		bool fileExists = FileInfo::exists(fileName);
 		output_ = new FileOutput(fileName, ios_base::out | ios_base::binary | ios_base::app);
-		*(output_->getStream()) << "# " << header_ << std::endl;
+		if (!fileExists)
+			*(output_->getStream()) << "# " << header_ << std::endl;
 		output_->getStream()->flush();
 	}
 	
