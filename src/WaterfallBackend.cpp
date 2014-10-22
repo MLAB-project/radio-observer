@@ -147,7 +147,7 @@ void SnapshotRecorder::write(Snapshot snapshot)
 		CSV_LOG_ENTRY(
 			backend_->getMetadataFile(), 
 			time,
-			Path::basename(nextSnapshot_.fileName) << ";"
+			Path::basename(snapshot.fileName) << ";"
 				<< noise_ << ";"
 				<< peakFrequency_ << ";"
 				<< magnitude_ << ";"
