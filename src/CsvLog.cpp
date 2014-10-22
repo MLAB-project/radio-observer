@@ -13,7 +13,7 @@ Ref<Output> CsvLog::getOutput(WFTime time)
 {
 	string fileName = getFileName(time);
 	if (output_.isNull() || fileName != output_->getName()) {
-		output_ = new FileOutput(fileName);
+		output_ = new FileOutput(fileName, ios_base::out | ios_base::binary | ios_base::app);
 		*(output_->getStream()) << "# " << header_ << std::endl;
 		output_->getStream()->flush();
 	}
