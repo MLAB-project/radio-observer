@@ -39,15 +39,15 @@ CsvLog::CsvLog(string fileNameFormat, string header) :
 
 string CsvLog::getFileName(WFTime time)
 {
-	return time.getHour().format(fileNameFormat_.c_str());
+	return time.getHour(true).format(fileNameFormat_.c_str());
 }
 
 
 void CsvLog::write(WFTime time, string entry)
 {
-	// MutexLock lock(&mutex_);
+	MutexLock lock(&mutex_);
 	
-	ostream& stream = *(getOutput(time)->getStream());
+	ostream& stream = getStream(time);
 	stream << entry << std::endl;
 	stream.flush();
 }
