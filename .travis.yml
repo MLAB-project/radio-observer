@@ -5,7 +5,11 @@ compiler:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq libfftw3-dev cfitsio-dev libjack-jackd2-dev
+<<<<<<< HEAD
 script: git submodule init && git submodule update && cd cppapp && make && cd .. && make
+=======
+script: git submodule init && git submodule update && cd cppapp && make && cd .. && make && make test
+>>>>>>> release_0_4
 branches:
   only:
     - master

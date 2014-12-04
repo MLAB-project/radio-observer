@@ -11,16 +11,30 @@
 #include "utils.h"
 
 
-Ref<Output> BolidRecorder::getMetadataFile(WFTime       time,
-								   const char * header)
-{
-	string name = getMetadataFileName(time);
-	if (metadataFile_.isNull() || (name != metadataFile_->getName())) {
-		metadataFile_ = new FileOutput(name);
-		*(metadataFile_->getStream()) << "# " << header << std::endl;
-	}
-	return metadataFile_;
+#define METADATA_ENTRY(entry) {                                                          \
+	WFTime t = WFTime::now();                                                           \
+	Ref<Output> metaf = getMetadataFile(                                                \
+		t,                                                                             \
+		"file name; noise; peak f; mag.; duration");                                   \
+	                                                                                    \
+	stringstream buffer;                                                                \
+	(buffer << entry << std::endl);                                                     \
+	buffer.flush();                                                                     \
+	((*metaf->getStream()) << buffer.str());                                            \
+	metaf->getStream()->flush();                                                        \
 }
+
+
+//Ref<Output> BolidRecorder::getMetadataFile(WFTime       time,
+//								   const char * header)
+//{
+//	string name = getMetadataFileName(time);
+//	if (metadataFile_.isNull() || (name != metadataFile_->getName())) {
+//		metadataFile_ = new FileOutput(name);
+//		*(metadataFile_->getStream()) << "# " << header << std::endl;
+//	}
+//	return metadataFile_;
+//}
 
 
 float BolidRecorder::average(float fromFq, float toFq)
@@ -36,26 +50,31 @@ float BolidRecorder::average(float fromFq, float toFq)
 }
 
 
-string BolidRecorder::getMetadataFileName(WFTime time)
-{
-	ostringstream ss;
-	ss <<
-		time.getHour().format("%Y%m%d%H%M%S") <<
-		"_" <<
-		backend_->getOrigin() <<
-		"_meta.csv";
-	
-	return Path::join(
-		metadataPath_,
-		ss.str()
-		//SnapshotRecorder::getFileBasename(
-		//	"meta",
-		//	"csv",
-		//	backend_->getOrigin(),
-		//	time.getHour()
-		//)
-	);
-}
+//string BolidRecorder::getMetadataFileName(WFTime time)
+//{
+//	ostringstream ss;
+//	//ss <<
+//	//	time.getHour().format("%Y%m%d%H%M%S") <<
+//	//	"_" <<
+//	//	backend_->getOrigin() <<
+//	//	"_meta.csv";
+//	
+//	ss <<
+//		"%Y%m%d%H%M%S_" <<
+//		backend_->getOrigin() <<
+//		"_meta.csv";
+//	
+//	return Path::join(
+//		metadataPath_,
+//		ss.str()
+//		//SnapshotRecorder::getFileBasename(
+//		//	"meta",
+//		//	"csv",
+//		//	backend_->getOrigin(),
+//		//	time.getHour()
+//		//)
+//	);
+//}
 
 
 void BolidRecorder::start()
@@ -78,10 +97,13 @@ void BolidRecorder::start()
 	CPPAPP_ASSERT(advanceTime_ >= 0.0);
 	CPPAPP_ASSERT(jitterTime_ >= 0.0);
 	CPPAPP_ASSERT(averageFrequencyRange_ > 0.0);
-	advance_         = backend_->timeToFFTSamples(advanceTime_);
-	jitter_          = backend_->timeToFFTSamples(jitterTime_);
-	averageBinRange_ = backend_->frequencyToBin(averageFrequencyRange_) - backend_->frequencyToBin(0);
+	advance_           = backend_->timeToFFTSamples(advanceTime_);
+	jitter_            = backend_->timeToFFTSamples(jitterTime_);
+	averageBinRange_   = backend_->frequencyToBin(averageFrequencyRange_) - backend_->frequencyToBin(0);
+	noiseMetadataRows_ = backend_->timeToFFTSamples(noiseMetadataTime_);
 	CPPAPP_ASSERT(averageBinRange_ > 0);
+	
+	lastNoiseMetadataEntry_ = 
 	
 	state_ = STATE_INIT;
 	
@@ -108,8 +130,43 @@ void BolidRecorder::update()
 		row + lowDetectBin_ + p - averageBinRange_ / 2,
 		averageBinRange_
 	);
+	float peakFq = backend_->binToFrequency(lowDetectBin_ + p);
 	
 	bool detect = (a > (n * 2.0));
+	
+	NoiseMessage msg(WFTime::now(), n, peakFq, a);
+	sendMessage(msg);
+	
+	//if (buffer_->size(lastNoiseMetadataEntry_) >= noiseMetadataRows_) {
+	//	//WFTime t = WFTime::now();
+	//	//Ref<Output> metaf = getMetadataFile(
+	//	//	t,
+	//	//	"file name; noise; peak f; mag.; duration");
+	//	//
+	//	float peakFq = backend_->binToFrequency(lowDetectBin_ + p);
+	//	//
+	//	LOG_INFO("Noise: " << n << "  Peak frequency: " << peakFq << "  Magnitude: " << a);
+	//	//
+	//	//(*metaf->getStream())
+	//	//	//<< Path::basename(nextSnapshot_.fileName)
+	//	//	<< ";" << n
+	//	//	<< ";" << peakFq
+	//	//	<< ";" << a
+	//	//	<< ";" << 0
+	//	//	<< std::endl;
+	//	//metaf->getStream()->flush();
+	//	//METADATA_ENTRY(";" << n << ";" << peakFq << ";" << a << ";" << 0);
+	//	CSV_LOG_ENTRY(
+	//		backend_->getMetadataFile(),
+	//		//metadataFile_, 
+	//		WFTime::now(), 
+	//		";"
+	//		<< n << ";"
+	//		<< peakFq << ";"
+	//		<< a << ";"
+	//		<< 0);
+	//	lastNoiseMetadataEntry_ = buffer_->mark();
+	//}
 	
 	switch (state_) {
 	case STATE_INIT:
@@ -142,32 +199,52 @@ void BolidRecorder::update()
 			state_ = STATE_BOLID;
 		} else {
 			if (duration_ >= jitter_) {
-				WFTime t = WFTime::now();
-				Ref<Output> metaf = getMetadataFile(
-					t,
-					"file name; noise; peak f; mag.; duration");
+				//WFTime t = WFTime::now();
+				//Ref<Output> metaf = getMetadataFile(
+				//	t,
+				//	"file name; noise; peak f; mag.; duration");
 				float duration = (float)(nextSnapshot_.length - 2 * advance_) / (float)backend_->getFFTSampleRate();
-				(*metaf->getStream())
-					<< Path::basename(nextSnapshot_.fileName)
-					//<< metaf->getName()
-					<< ";" << noise_
-					<< ";" << peakFreq_
-					<< ";" << magnitude_
-					<< ";" << duration
-					<< std::endl;
-				metaf->getStream()->flush();
+				//(*metaf->getStream())
+				//	<< Path::basename(nextSnapshot_.fileName)
+				//	//<< metaf->getName()
+				//	<< ";" << noise_
+				//	<< ";" << peakFreq_
+				//	<< ";" << magnitude_
+				//	<< ";" << duration
+				//	<< std::endl;
+				//metaf->getStream()->flush();
+				//METADATA_ENTRY(
+				//	Path::basename(nextSnapshot_.fileName) << ";"
+				//	<< noise_ << ";"
+				//	<< peakFreq_ << ";"
+				//	<< magnitude_ << ";"
+				//	<< duration
+				//	);
+				WFTime t = WFTime::now();
 				
-				MessageDispatch<BolidMessage>::getInstance().sendMessage(BolidMessage(
+				CSV_LOG_ENTRY(
+					backend_->getMetadataFile(),
+					//metadataFile_,
+					t,
+					Path::basename(nextSnapshot_.fileName) << ";"
+					<< noise_ << ";"
+					<< peakFreq_ << ";"
+					<< magnitude_ << ";"
+					<< duration
+				);
+				
+				sendMessage(BolidMessage(
+					t,
+					noise_,
+					peakFreq_,
+					magnitude_,
+					
 					peakFreq_ - (maxDetectFq_ - minDetectFq_) / 4,
 					peakFreq_ + (maxDetectFq_ - minDetectFq_) / 4,
 					//nextSnapshot_.start,
 					//nextSnapshot_.start + nextSnapshot_.length,
 					0,
-					fftSamplesToRaw(nextSnapshot_.length),
-					
-					peakFreq_,
-					magnitude_,
-					noise_
+					fftSamplesToRaw(nextSnapshot_.length)
 				));
 				
 				LOG_WARNING("************** METEOR DETECTED **************");
@@ -292,7 +369,9 @@ Ref<DIObject> BolidRecorder::make(Ref<DynObject> config, Ref<DIObject> parent)
 	float  averageFreqRange = config->getStrDouble("avg_freq_range",  40);
 	float  thresholdRatio   = config->getStrDouble("threshold",      2.0);
 	
-	string metadataPath     = config->getStrString("metadata_path",  ".");
+	double noiseMetadataTime = config->getStrDouble("noise_metadata_time", 3600);
+	
+	//string metadataPath     = config->getStrString("metadata_path",  ".");
 	
 	Ref<BolidRecorder> result = new BolidRecorder(
 		parent,
@@ -314,8 +393,10 @@ Ref<DIObject> BolidRecorder::make(Ref<DynObject> config, Ref<DIObject> parent)
 		jitterTime,
 		averageFreqRange,
 		thresholdRatio,
+
+		noiseMetadataTime
 		
-		metadataPath
+		//metadataPath
 	);
 	
 	return result;

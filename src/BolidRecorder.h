@@ -13,6 +13,17 @@
 #include "WaterfallBackend.h"
 #include "MessageDispatch.h"
 #include "BolidMessage.h"
+#include "CsvLog.h"
+
+
+/**
+ * \brief Represents the variables computed and used by the bolid detection algorithm.
+ */
+struct BolidSignal {
+	float noise;
+	float peakFreq;
+	float magnitude;
+};
 
 
 /**
@@ -72,7 +83,10 @@ protected:
 	int    averageBinRange_; ///< In bins.
 	float  thresholdRatio_;
 	
-	string metadataPath_;
+	double noiseMetadataTime_; ///< In seconds.
+	int    noiseMetadataRows_; ///< In FFT rows.
+	
+	//string metadataPath_;
 	///@}
 	
 	/**
@@ -89,10 +103,14 @@ protected:
 	//bool  bolidRecord_;
 	
 	vector<float> noiseBuffer_;
+
+	int lastNoiseMetadataEntry_; ///< Mark into the FFT buffer.
+
+	//Ref<CsvLog> metadataFile_;
 	
-	Ref<Output> metadataFile_;
+	//Ref<Output> metadataFile_;
 	
-	Ref<Output> getMetadataFile(WFTime time, const char *header);
+	//Ref<Output> getMetadataFile(WFTime time, const char *header);
 	///@}
 	
 	float average(float fromFq, float toFq);
@@ -101,7 +119,7 @@ public:
 	/**
 	 * \brief Constructor.
 	 */
-	BolidRecorder();
+	//BolidRecorder();
 	/**
 	 * \brief Constructor.
 	 */
@@ -120,8 +138,9 @@ public:
 			    double                 jitterTime,
 			    float                  averageFreqRange,
 			    float                  threshold,
-			    string                 metadataPath) :
-		SnapshotRecorder(backend, snapshotLength, leftFrequency, rightFrequency, outputDir, outputType, compressOutput),
+			    double                 noiseMetadataTime) :
+			    //string                 metadataPath) :
+		SnapshotRecorder(backend, snapshotLength, leftFrequency, rightFrequency, outputDir, outputType, compressOutput, false),
 		minNoiseFq_(minNoiseFq),
 		maxNoiseFq_(maxNoiseFq),
 		lowNoiseBin_(0),
@@ -132,7 +151,8 @@ public:
 		jitterTime_(jitterTime),
 		averageFrequencyRange_(averageFreqRange),
 		thresholdRatio_(threshold),
-		metadataPath_(metadataPath),
+		noiseMetadataTime_(noiseMetadataTime),
+		//metadataPath_(metadataPath),
 		//bolidDetected_(false),
 		//bolidRecord_(false),
 		duration_(0)
@@ -151,6 +171,16 @@ public:
 		
 		lowNoiseBin_ = min(minFqBin, maxFqBin);
 		noiseWidth_  = max(minFqBin, maxFqBin) - lowNoiseBin_;
+		
+		//ostringstream ss;
+		//ss <<
+		//	"%Y%m%d%H%M%S_" <<
+		//	backend_->getOrigin() <<
+		//	"_meta.csv";
+		//
+		//metadataFile_ = new CsvLog(
+		//	Path::join(metadataPath_, ss.str()),
+		//	"file name; noise; peak f.; mag.; duration");
 	}
 	
 	/**
@@ -158,7 +188,7 @@ public:
 	 */
 	virtual ~BolidRecorder() {}
 	
-	virtual string getMetadataFileName(WFTime time);
+	//virtual string getMetadataFileName(WFTime time);
 	
 	virtual void start();
 	virtual void update();

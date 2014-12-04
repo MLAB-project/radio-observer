@@ -85,7 +85,7 @@ public:
 
 	inline WFTime add(long seconds, long microseconds)
 	{
-		long usec = safeAdd(time.tv_usec, microseconds % (long)US_IN_SECOND);
+		long usec = safeAdd((long)time.tv_usec, microseconds % (long)US_IN_SECOND);
 		
 		long sec = safeAdd((long)time.tv_sec, seconds);
 		sec = safeAdd(sec, microseconds / (long)US_IN_SECOND);

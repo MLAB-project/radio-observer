@@ -15,7 +15,12 @@ using namespace cppapp;
 int JackFrontend::onJackInput(jack_nframes_t nframes, void *arg)
 {
 	JackFrontend *self = (JackFrontend*)arg;
-
+	
+	if (self->isProcessing_) {
+		LOG_ERROR("JackFrontend: previous call to onJackInput hasn't finished yet.");
+	}
+	self->isProcessing_ = true;
+	
 	jack_default_audio_sample_t *left =
 		(jack_default_audio_sample_t *)jack_port_get_buffer(self->leftPort_, nframes);
 	jack_default_audio_sample_t *right =
@@ -60,6 +65,8 @@ int JackFrontend::onJackInput(jack_nframes_t nframes, void *arg)
 			self->midiMutex_.unlock();
 		}
 	}
+	
+	self->isProcessing_ = false;
 	
 	return 0;
 }
@@ -188,7 +195,7 @@ void BolidMessageListener::sendMessage(const BolidMessage &msg)
 		0,
 		msg.minFreq,
 		msg.maxFreq,
-		msg.peakFreq,
+		msg.peakFrequency,
 		msg.magnitude,
 		msg.noise
 	);

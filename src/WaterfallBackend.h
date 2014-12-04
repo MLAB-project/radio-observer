@@ -14,6 +14,8 @@
 #include "FITSWriter.h"
 #include "RingBuffer.h"
 #include "Channel.h"
+#include "BolidMessage.h"
+#include "CsvLog.h"
 #include "utils.h"
 
 #include <cmath>
@@ -71,15 +73,18 @@ public:
 		rawHandles_  = rawHandles;
 	}
 	
-	inline int getSampleRate();
-	inline int getFFTSampleRate();
+	int getSampleRate();
+	int getFFTSampleRate();
 	
 	inline int fftMarkToRaw(int mark);
 	inline WFTime fftMarkToTime(int mark);
 	/**
 	 * \brief Converts number of FFT samples to number raw I/Q samples.
 	 */
-	inline int fftSamplesToRaw(int sampleCount);
+	inline int fftSamplesToRaw(int sampleCount)
+	{
+		return ((double)sampleCount / (double)getFFTSampleRate()) * (double)getSampleRate();
+	}
 	
 	virtual int requestBufferSize() { return 0; }
 	
@@ -158,6 +163,13 @@ protected:
 	virtual void write(Snapshot snapshot);
 	virtual void writeRaw(Snapshot snapshot);
 	
+	bool        listenToNoise_;
+	float       noise_;
+	float       peakFrequency_;
+	float       magnitude_;
+	
+	static void processNoiseMessage(const NoiseMessage &msg, void *data);
+	
 	string getFileName(int mark);
 
 public:
@@ -167,7 +179,8 @@ public:
 				  float                  rightFrequency,
 				  string                 outputDir,
 				  string                 outputType,
-				  bool                   compressOutput) :
+				  bool                   compressOutput,
+				  bool                   listenToNoise) :
 		Recorder(backend),
 		outputDir_(outputDir),
 		outputType_(outputType),
@@ -175,9 +188,14 @@ public:
 		snapshotLength_(snapshotLength),
 		leftFrequency_(leftFrequency),
 		rightFrequency_(rightFrequency),
-		writeUnfinished_(true)
+		writeUnfinished_(true),
+		listenToNoise_(listenToNoise)
 	{
 		ORDER_PAIR(leftFrequency_, rightFrequency_);
+		
+		if (listenToNoise) {
+			addListener<NoiseMessage>(&SnapshotRecorder::processNoiseMessage, (void*)this);
+		}
 	}
 	
 	virtual ~SnapshotRecorder() {}
@@ -215,13 +233,17 @@ public:
 private:
 	WaterfallBackend(const WaterfallBackend& other);
 	
-	string           origin_;
+	string                 origin_;
 	
-	FFTBuffer             buffer_;
-	Mutex                 bufferMutex_;
-	vector<RawDataHandle> rawHandles_;
+	FFTBuffer              buffer_;
+	int                    bufferChunkSize_;
+	Mutex                  bufferMutex_;
+	vector<RawDataHandle>  rawHandles_;
 	
 	vector<Ref<Recorder> > recorders_;
+	
+	string                 metadataPath_;
+	Ref<CsvLog>            metadataFile_;
 
 protected:
 	virtual void processFFT(const fftw_complex *data, int size, DataInfo info, int rawMark);
@@ -233,6 +255,12 @@ public:
 	virtual ~WaterfallBackend();
 	
 	string getOrigin() { return origin_; }
+	
+	void setMetadataPath(const string& path) { metadataPath_ = path; } 
+	Ref<CsvLog> getMetadataFile();
+	
+	int getBufferChunkSize() { return bufferChunkSize_; }
+	void setBufferChunkSize(int value) { bufferChunkSize_ = value; }
 	
 	void addRecorder(Ref<Recorder> recorder);
 	

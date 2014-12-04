@@ -43,7 +43,7 @@ def get_image_info(image):
 
 
 FN_IDENTITY = lambda image: image.data
-FN_LOG      = lambda image: numpy.log(image.data)
+FN_LOG      = lambda image: numpy.log(image.data[image.data != 0])
 
 
 # A UTC class.

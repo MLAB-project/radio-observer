@@ -46,10 +46,10 @@ WFTime Recorder::fftMarkToTime(int mark)
 }
 
 
-int Recorder::fftSamplesToRaw(int sampleCount)
-{
-	return ((double)sampleCount / (double)getFFTSampleRate()) * (double)getSampleRate();
-}
+// int Recorder::fftSamplesToRaw(int sampleCount)
+// {
+// 	return ((double)sampleCount / (double)getFFTSampleRate()) * (double)getSampleRate();
+// }
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,9 +139,21 @@ void SnapshotRecorder::write(Snapshot snapshot)
 	
 	string fileName = "!";
 	//fileName += getFileName(time);
-	fileName += snapshot.fileName;
+	fileName += Path::join(outputDir_, snapshot.fileName);
 	
 	LOG_INFO("Writing snapshot \"" << (fileName.c_str() + 1) << "\"...");
+	
+	if (listenToNoise_) {
+		CSV_LOG_ENTRY(
+			backend_->getMetadataFile(), 
+			time,
+			Path::basename(snapshot.fileName) << ";"
+				<< noise_ << ";"
+				<< peakFrequency_ << ";"
+				<< magnitude_ << ";"
+				<< 0
+		);
+	}
 	
 	FITSWriter w;
 	
@@ -205,7 +217,7 @@ void SnapshotRecorder::writeRaw(Snapshot snapshot)
 	float fftSampleRate = backend_->getFFTSampleRate();
 	
 	string fileName = "!";
-	fileName += getFileName("raws", "fits", time);
+	fileName += Path::join(outputDir_, getFileName("raws", "fits", time));
 	
 	LOG_INFO("Writing raw snapshot \"" << (fileName.c_str() + 1) << "\"...");
 	
@@ -246,6 +258,16 @@ void SnapshotRecorder::writeRaw(Snapshot snapshot)
 	w.close();
 	
 	LOG_DEBUG("Finished writing raw snapshot.");
+}
+
+
+void SnapshotRecorder::processNoiseMessage(const NoiseMessage &msg, void *data)
+{
+	SnapshotRecorder *self = (SnapshotRecorder*)data;
+	
+	self->noise_         = msg.noise;
+	self->peakFrequency_ = msg.peakFrequency;
+	self->magnitude_     = msg.magnitude;
 }
 
 
@@ -387,11 +409,25 @@ void SnapshotRecorder::stop()
 void SnapshotRecorder::update()
 {
 	if (buffer_->size(nextSnapshot_.start) >= snapshotRows_ + 2) {
-		LOG_DEBUG("Snapshot full [start_: " << nextSnapshot_.start <<
+		LOG_DEBUG("SnapshotRecorder: Snapshot full [start_: " << nextSnapshot_.start <<
 				", snapshotRows_: " << snapshotRows_ <<
 				", snapshotLength_: " << snapshotLength_ <<
 				", buffer_->size(start_): " << buffer_->size(nextSnapshot_.start) <<
 				"].");
+		//LOG_DEBUG("SnapshotRecorder: processing calls count = "
+		//		<< backend_->getProcessingCount()
+		//		<< ", average processing time (ms) = "
+		//		<< backend_->getAverageProcessingTime()
+		//		<< ", max processing time (ms) = "
+		//		<< backend_->getMaxProcessingTime()
+		//		<< ", min processing time (ms) = "
+		//		<< backend_->getMinProcessingTime()
+		//		<< ", total processing call count = "
+		//		<< backend_->getTotalProcessingCount()
+		//		<< ", total max processing time (ms) = "
+		//		<< backend_->getTotalMaxProcessingTime());
+		backend_->logProcessingTimes();
+		backend_->clearProcessingTime();
 		startWriting();
 	}
 }
@@ -420,7 +456,8 @@ Ref<DIObject> SnapshotRecorder::make(Ref<DynObject> config, Ref<DIObject> parent
 		rightFrequency,
 		outputDir,
 		outputType,
-		compressOutput
+		compressOutput,
+		true
 	);
 }
 
@@ -430,6 +467,23 @@ CPPAPP_DI_METHOD("snapshot", SnapshotRecorder, make);
 ////////////////////////////////////////////////////////////////////////////////
 // WATERFALL BACKEND
 ////////////////////////////////////////////////////////////////////////////////
+
+
+Ref<CsvLog> WaterfallBackend::getMetadataFile()
+{
+	if (metadataFile_.isNull()) {
+		ostringstream ss;
+		ss <<
+			"%Y%m%d%H%M%S_" <<
+			getOrigin() <<
+			"_meta.csv";
+		
+		metadataFile_ = new CsvLog(
+			Path::join(metadataPath_, ss.str()),
+			"file name; noise; peak f.; mag.; duration");
+	}
+	return metadataFile_;
+}
 
 
 void WaterfallBackend::processFFT(const fftw_complex *data, int size, DataInfo info, int rawMark)
@@ -495,7 +549,8 @@ WaterfallBackend::WaterfallBackend(int    bins,
                                    int    overlap,
                                    string origin) :
 	FFTBackend(bins, overlap),
-	origin_(origin)
+	origin_(origin),
+	bufferChunkSize_(WATERFALL_BACKEND_CHUNK_SIZE)
 {
 }
 
@@ -531,7 +586,7 @@ void WaterfallBackend::startStream(StreamInfo info)
 	}
 	
 	// TODO: Make the chunk size an config option.
-	buffer_.resize(getBins(), WATERFALL_BACKEND_CHUNK_SIZE, bufferSize);
+	buffer_.resize(getBins(), bufferChunkSize_, bufferSize);
 	rawHandles_.resize(buffer_.getCapacity());
 	
 	resizeRawBuffer(fftSamplesToRaw(bufferSize));
@@ -577,6 +632,12 @@ Ref<DIObject> WaterfallBackend::make(Ref<DynObject> config, Ref<DIObject> parent
 		overlap,
 		origin
 	);
+	
+	backend->setMetadataPath(
+		config->getStrString("metadata_path", "."));
+	
+	backend->setBufferChunkSize(
+		config->getStrInt("buffer_chunk_size", WATERFALL_BACKEND_CHUNK_SIZE));
 	
 	backend->setGain(
 		config->getStrDouble("iq_gain", 0));

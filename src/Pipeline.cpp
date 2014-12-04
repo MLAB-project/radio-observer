@@ -11,6 +11,10 @@
 
 void Pipeline::run()
 {
+	FOR_EACH(agents_, agent) {
+		(*agent)->start();
+	}
+	
 	frontend_->setBackend(backend_);
 	frontend_->run();
 }
@@ -18,7 +22,16 @@ void Pipeline::run()
 
 void Pipeline::stop()
 {
+	FOR_EACH(agents_, agent) {
+		(*agent)->stop();
+	}
+	
 	frontend_->stop();
+	
+	FOR_EACH(agents_, agent) {
+		LOG_DEBUG("Waiting for agent " << (*agent)->getName() << " to stop...");
+		(*agent)->join();
+	}
 }
 
 
@@ -28,6 +41,8 @@ bool Pipeline::injectDependency(Ref<DIObject> obj, std::string key)
 		setFrontend(obj);
 	} else if (key.compare("backend") == 0) {
 		setBackend(obj);
+	} else if (key.compare("agent") == 0) {
+		addAgent(obj);
 	}
 	
 	return DIObject::injectDependency(obj, key);

@@ -5,10 +5,6 @@
 			"file_name": "radio-observer.log",
 			"log_level": "debug",
 		},
-		{
-			"file_name": "-", // "-" stands for standard error output
-			"log_level": "warning",
-		},
 	],
 	
 	"jack_left_port":  "system:capture_1",      //  JACKd inputs
@@ -43,6 +39,7 @@
 					"iq_phase_shift": 0,
 					
 					"metadata_path":  "./data", // path to metadata output directory
+					
 					"children": [
 						{
 							"key":     "recorder",      // indentification of method which will procces FFT output
@@ -59,12 +56,11 @@
 							"key":     "recorder",      // inedentification of meteor detector recording.
 							"factory": "bolid",
 							
-						     "output_dir": ".",          // absolute path to data output directory
-							"output_type": "blid",      // data output idetifier (this string will be used in file name)
-							"metadata_path": ".",       // absolute path  to data output directory
-                                   "advance_time":     2,      // time interval of data recorded before detection is triggered
-                                   "jitter_time":      5,      // maximal time interval between two separate detection classified as same detection.
-							
+							"output_dir": "./snapshots",          // absolute path  to data output directory
+							"output_type": "snap",      // data output idetifier (this string will be used in file name)
+							"advance_time":     2,      // time interval of data recorded before detection is triggered
+							"jitter_time":      5,      // maximal time interval between two separate detection classified as same detection.
+
 							"low_detect_freq": 10300,   // low  frequency meteor detection border
 							"hi_detect_freq":  10900,   // high frequency meteor detection border (in spectrogram)
 							"low_noise_freq":   9000,   // low border for spectral frequency intensity reference

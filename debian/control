@@ -1,0 +1,14 @@
+Source: radio-observer
+Section: devel
+Priority: optional
+Maintainer: Jan Milik <milikjan@fit.cvut.cz>
+Build-Depends: cmake, cppapp, fftw3, cfitsio
+Standards-Version: 3.9.4
+Homepage: http://www.astrozor.cz
+
+Package: radio-observer
+Architecture: any
+Depends: 
+Description: Radio Observer radioastronomical tool.
+ Long description of greet-the-world.
+ It can span multiple lines!
