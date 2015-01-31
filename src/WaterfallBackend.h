@@ -88,8 +88,17 @@ public:
 	
 	virtual int requestBufferSize() { return 0; }
 	
+	/**
+	 * \brief Callback called at the beginning of the FFT stream.
+	 */
 	virtual void start() {}
+	/**
+	 * \brief Callback called when the FFT stream terminates.
+	 */
 	virtual void stop() {}
+	/**
+	 * \brief Callback periodically called on FFT input.
+	 */
 	virtual void update() = 0;
 };
 
@@ -244,6 +253,7 @@ private:
 	
 	string                 metadataPath_;
 	Ref<CsvLog>            metadataFile_;
+	Mutex                  metadataFileLock_;
 
 protected:
 	virtual void processFFT(const fftw_complex *data, int size, DataInfo info, int rawMark);

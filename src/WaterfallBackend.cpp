@@ -119,7 +119,10 @@ void SnapshotRecorder::startWriting()
 	}
 	
 	snapshots_.send(nextSnapshot_);
+	// Next snapshot wil start at the end fo the previous one.
 	nextSnapshot_ = Snapshot(nextSnapshot_.end());
+	// File name of the next snapshot will include the time at
+	// the start of the snapshot.
 	nextSnapshot_.fileName = getFileName(nextSnapshot_.start);
 }
 
@@ -185,19 +188,10 @@ void SnapshotRecorder::write(Snapshot snapshot)
 	
 	w.checkStatus("Error occured while writing FITS file header.");
 	
-	//int16_t *row = new int16_t[width];
-	
 	int rowIndex = start;
 	for (int y = 0; y < length; y++, rowIndex++) {
-		//float *srcRow = buffer_->at(rowIndex);
-		//for (int x = 0; x < width; x++) {
-		//	row[x] = FFTBackend::floatToInt(*(srcRow + leftBin_ + x) / (double)backend_->getBins());
-		//}
-		//w.write(y, 1, row);
 		w.write(y, 1, (float*)(buffer_->at(rowIndex) + leftBin_));
 	}
-	
-	//delete [] row;
 	
 	w.checkStatus("Error occured while writing data to a FITS file.");
 	w.close();
@@ -414,18 +408,6 @@ void SnapshotRecorder::update()
 				", snapshotLength_: " << snapshotLength_ <<
 				", buffer_->size(start_): " << buffer_->size(nextSnapshot_.start) <<
 				"].");
-		//LOG_DEBUG("SnapshotRecorder: processing calls count = "
-		//		<< backend_->getProcessingCount()
-		//		<< ", average processing time (ms) = "
-		//		<< backend_->getAverageProcessingTime()
-		//		<< ", max processing time (ms) = "
-		//		<< backend_->getMaxProcessingTime()
-		//		<< ", min processing time (ms) = "
-		//		<< backend_->getMinProcessingTime()
-		//		<< ", total processing call count = "
-		//		<< backend_->getTotalProcessingCount()
-		//		<< ", total max processing time (ms) = "
-		//		<< backend_->getTotalMaxProcessingTime());
 		backend_->logProcessingTimes();
 		backend_->clearProcessingTime();
 		startWriting();
@@ -471,6 +453,8 @@ CPPAPP_DI_METHOD("snapshot", SnapshotRecorder, make);
 
 Ref<CsvLog> WaterfallBackend::getMetadataFile()
 {
+	MutexLock lock(&metadataFileLock_);
+	
 	if (metadataFile_.isNull()) {
 		ostringstream ss;
 		ss <<
