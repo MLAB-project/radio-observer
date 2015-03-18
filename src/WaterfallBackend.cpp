@@ -170,6 +170,7 @@ void SnapshotRecorder::write(Snapshot snapshot)
 	//w.createImage(width, length, SHORT_IMG);
 	
 	w.comment("File created by " PACKAGE_STRING ".");
+	w.comment("Git version: " GIT_VERSION);
 	w.comment("See " PACKAGE_URL ".");
 	w.writeHeader("ORIGIN", origin.c_str(), "");
 	w.date();
@@ -178,13 +179,17 @@ void SnapshotRecorder::write(Snapshot snapshot)
 	
 	w.writeHeader("CTYPE2", "TIME",                      "in seconds");
 	w.writeHeader("CRPIX2", 1,                           ""          );
-	w.writeHeader("CRVAL2", (float)time.seconds(),       ""          );
-	w.writeHeader("CDELT2", 1.f / (float)fftSampleRate,  ""          );
+	w.writeHeader("CRVAL2", (long long)time.toMilliseconds(),
+			    "unix time of the first FFT row in this file in ms");
+	w.writeHeader("CDELT2", ((double)MS_IN_SECOND) / (double)fftSampleRate,
+			    "time difference between two FFT samples in ms");
 	
 	w.writeHeader("CTYPE1", "FREQ",                             "in Hz");
 	w.writeHeader("CRPIX1", 1.f,                                ""     );
-	w.writeHeader("CRVAL1", (float)leftFrequency_,              ""     );
-	w.writeHeader("CDELT1", (float)backend_->binToFrequency(),  ""     );
+	w.writeHeader("CRVAL1", (float)leftFrequency_,
+			    "frequency, in Hz, of the leftmost pixel in the image");
+	w.writeHeader("CDELT1", (float)backend_->binToFrequency(),
+			    "frequency difference between two neighbouring pixels in Hz");
 	
 	w.checkStatus("Error occured while writing FITS file header.");
 	
@@ -208,7 +213,7 @@ void SnapshotRecorder::writeRaw(Snapshot snapshot)
 	WFTime time   = fftMarkToTime(snapshot.start);
 	string origin = backend_->getOrigin();
 	
-	float fftSampleRate = backend_->getFFTSampleRate();
+	float sampleRate = (float)backend_->getStreamInfo().sampleRate;
 	
 	string fileName = "!";
 	fileName += Path::join(outputDir_, getFileName("raws", "fits", time));
@@ -234,12 +239,12 @@ void SnapshotRecorder::writeRaw(Snapshot snapshot)
 	w.writeHeader("CTYPE2", "TIME",                      "in seconds");
 	w.writeHeader("CRPIX2", 1,                           ""          );
 	w.writeHeader("CRVAL2", (float)time.seconds(),       ""          );
-	w.writeHeader("CDELT2", 1.f / (float)fftSampleRate,  ""          );
+	w.writeHeader("CDELT2", 1.f / (float)sampleRate,     ""          );
 	
-	w.writeHeader("CTYPE1", "FREQ",                             "in Hz");
+	w.writeHeader("CTYPE1", "CHAN",                             "in Hz");
 	w.writeHeader("CRPIX1", 1.f,                                ""     );
-	w.writeHeader("CRVAL1", (float)leftFrequency_,              ""     );
-	w.writeHeader("CDELT1", (float)backend_->binToFrequency(),  ""     );
+	w.writeHeader("CRVAL1", 0,                                  ""     );
+	w.writeHeader("CDELT1", 1,                                  ""     );
 	
 	w.checkStatus("Error occured while writing FITS file header.");
 	

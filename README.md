@@ -9,6 +9,7 @@ Radioastronomy utility. For more information, see [the MLAB wiki](http://wiki.ml
 * [Compilation](#compilation)
 * [Configuration](#configuration)
 * [Usage](#usage)
+* [Output Format](#output)
 * [ChangeLog](#changelog)
 
 
@@ -72,6 +73,23 @@ radio-observer 2> your_log_file.log`).
 
 Fits file handling: FITS can be converted in png by fits2png script. 
 `sudo apt-get install python-pyfits`
+
+
+Output Format
+-------------
+
+### Snapshot and Meteor FFT FITS Files
+
+FFT FITS files have frequency on X-axis and time on Y-axis. Important FITS headers are:
+
+* `DATE` - This is the time the FITS file was written.
+* `DATE_OBS` - Time of the beggining of the file. In other words, this is the
+  time of the first FFT row in the file.
+* `CRVAL2` - Unix time of the first FFT row in milliseconds since Unix epoch.
+* `CDELT2` - Time difference between two consequtive FFT rows in milliseconds.
+* `CRVAL1` - Frequency of the leftmost pixel in a row.
+* `CDELT1` - Frequency difference between two neighbouring pixels in a FFT row.
+
 
 ChangeLog
 ---------

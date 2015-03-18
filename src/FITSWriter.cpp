@@ -105,10 +105,26 @@ void FITSWriter::writeHeader(const char *keyword,
 
 
 void FITSWriter::writeHeader(const char *keyword,
+					    double      value,
+					    const char *comment)
+{
+	writeHeader(keyword, TDOUBLE, (void*)&value, comment);
+}
+
+
+void FITSWriter::writeHeader(const char *keyword,
 					    int         value,
 					    const char *comment)
 {
 	writeHeader(keyword, TINT, (void*)&value, comment);
+}
+
+
+void FITSWriter::writeHeader(const char *keyword,
+					    long long   value,
+					    const char *comment)
+{
+	writeHeader(keyword, TLONGLONG, (void*)&value, comment);
 }
 
 
