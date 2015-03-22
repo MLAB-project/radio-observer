@@ -127,6 +127,14 @@ void SnapshotRecorder::startWriting()
 }
 
 
+void SnapshotRecorder::writeHeader(FITSWriter *w)
+{
+	w->comment("File created by " PACKAGE_STRING ".");
+	w->comment("Git version: " GIT_VERSION);
+	w->comment("See " PACKAGE_URL ".");
+}
+
+
 /**
  * \brief Writes a specified snapshot to a FITS file.
  */
@@ -169,9 +177,7 @@ void SnapshotRecorder::write(Snapshot snapshot)
 	w.createImage(width, length, FLOAT_IMG);
 	//w.createImage(width, length, SHORT_IMG);
 	
-	w.comment("File created by " PACKAGE_STRING ".");
-	w.comment("Git version: " GIT_VERSION);
-	w.comment("See " PACKAGE_URL ".");
+	writeHeader(&w);
 	w.writeHeader("ORIGIN", origin.c_str(), "");
 	w.date();
 	w.comment(WFTime::now().format("Local time: %Y-%m-%d %H:%M:%S %Z", true).c_str());
@@ -229,8 +235,7 @@ void SnapshotRecorder::writeRaw(Snapshot snapshot)
 	w.createImage(2, length, FLOAT_IMG);
 	//w.createImage(2, length, SHORT_IMG);
 	
-	w.comment("File created by " PACKAGE_STRING ".");
-	w.comment("See " PACKAGE_URL ".");
+	writeHeader(&w);
 	w.writeHeader("ORIGIN", origin.c_str(), "");
 	w.date();
 	w.comment(WFTime::now().format("Local time: %Y-%m-%d %H:%M:%S %Z", true).c_str());
@@ -238,8 +243,10 @@ void SnapshotRecorder::writeRaw(Snapshot snapshot)
 	
 	w.writeHeader("CTYPE2", "TIME",                      "in seconds");
 	w.writeHeader("CRPIX2", 1,                           ""          );
-	w.writeHeader("CRVAL2", (float)time.seconds(),       ""          );
-	w.writeHeader("CDELT2", 1.f / (float)sampleRate,     ""          );
+	w.writeHeader("CRVAL2", (long long)time.toMilliseconds(),
+			    "unix time of the first IQ sample in this file in ms");
+	w.writeHeader("CDELT2", ((float)MS_IN_SECOND) / (float)sampleRate,
+			    "time difference between two IQ samples in ms");
 	
 	w.writeHeader("CTYPE1", "CHAN",                             "in Hz");
 	w.writeHeader("CRPIX1", 1.f,                                ""     );

@@ -169,6 +169,7 @@ protected:
 	
 	void*        threadMethod();
 	void         startWriting();
+	virtual void writeHeader(FITSWriter *writer);
 	virtual void write(Snapshot snapshot);
 	virtual void writeRaw(Snapshot snapshot);
 	
