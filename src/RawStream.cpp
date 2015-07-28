@@ -55,6 +55,8 @@ void RawStream::runFromFD()
 		}
 
 		ret /= sizeof(float) * 2;
+
+		outputBuffer.resize(ret);
 		for (int i = 0; i < ret; i++) {
 			outputBuffer[i].real = dataBuffer[2*i];
 			outputBuffer[i].imag = dataBuffer[2*i + 1];
