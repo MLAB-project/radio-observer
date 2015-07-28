@@ -60,7 +60,19 @@ Ref<Frontend> App::createFrontend()
 		string fileName = options().args()[0];
 		LOG_INFO("Using WAV frontend, reading " << fileName << "...");
 		return new WAVStream(new FileInput(fileName));
-	} else {
+	}
+
+	string frontendName = config_->getStrString("frontend", "jack");
+
+	if (frontendName == "tcp_raw") {
+		LOG_INFO("Using raw TCP frontend.");
+
+		return new RawTCPStream(
+			config_->getStrString("tcp_host", "localhost"),
+			config_->getStrInt("tcp_port", 4000),
+			config_->getStrInt("raw_sample_rate", 96000)
+		);
+	} else if (frontendName == "jack") {
 		LOG_INFO("Using JACK frontend.");
 		
 		if (config_->hasStrItem("jack_left_port") && !config_->hasStrItem("jack_right_port")) {
@@ -84,6 +96,9 @@ Ref<Frontend> App::createFrontend()
 			//config()->get("jack_right_port", "system:capture_2")->asString().c_str()
 		);
 	}
+
+	LOG_ERROR("No frontend to use.");
+	exit(1);
 }
 
 
