@@ -41,7 +41,7 @@ void RawStream::runFromFD()
 
 	startStream();
 
-	while (true) {
+	while (!stopping_) {
 		ssize_t ret = read(fd_, (char*)&(dataBuffer[0]), rawBufferSize);
 
 		if (ret < 0) {
