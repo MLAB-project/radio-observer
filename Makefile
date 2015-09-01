@@ -4,7 +4,7 @@
 
 
 BIN_NAME     = radio-observer
-VERSION      = 0.4
+VERSION      = 0.5rc1
 GIT_VERSION := $(shell git log -1 --pretty="%h %d")
 # yes / no
 IS_LIBRARY   = no

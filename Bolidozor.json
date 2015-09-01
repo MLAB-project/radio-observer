@@ -1,14 +1,15 @@
-
 {
 	"logging": [
 		{
-			"file_name": "radio-observer.log",
+			"file_name": "/home/odroid/bolidozor/radio-observer.log",
 			"log_level": "debug",
 		},
 	],
 	
-	"jack_left_port":  "system:capture_1",      //  JACKd inputs
-	"jack_right_port": "system:capture_2",
+	"frontend": "tcp_raw",
+	"tcp_host": "localhost",
+	"tcp_port": 3701,
+	"raw_sample_rate": 96000,
 	
 	"configuration": "default",         // name of configuration which will be selected from following list
 	
@@ -22,8 +23,8 @@
 					"key":     "backend",
 					"factory": "waterfall", // waterfall data will be processed
 					
-					"bins":    32768,       // number of bins used in FFT calculation
-					"overlap": 24576,       // number of ovelaping samples from previous FFT window
+					"bins":    65536,       // number of bins used in FFT calculation
+					"overlap": 49152,       // number of ovelaping samples from previous FFT window
 
 					
 					// Chunk size of the FFT buffer - this changes the size of the
@@ -33,42 +34,51 @@
 					// 1048576 = 1024 * 1024
 					"buffer_chunk_size": 1048576, 
 					
-					"origin": "debug",      // name of detection station 
+					"origin": "TEST-RX",      // name of detection station
+					"username":"testakovsko",
 					
 					"iq_gain":        0,    // I/Q correction paremeters currently have not effect
 					"iq_phase_shift": 0,
-					
-					"metadata_path":  "./data", // path to metadata output directory
-					
+					"transmitter_carrier": 143050000,
+					//"transmitter_carrier": 144447000, // Klet beacon
+
+					"metadata_path":  "/home/odroid/bolidozor/station/data/", // path to metadata output directory
+					"metadata_path_sort":  "/home/odroid/bolidozor/station/sort/data/", // path to metadata output directory
+
 					"children": [
 						{
-							"key":     "recorder",      // indentification of method which will procces FFT output
+							"key":     "recorder",      // identification of method which will procces FFT output
 							"factory": "snapshot",      // method which creates continuous snapshots in eqidistant intervals
 
-							"output_dir": ".",          // absolute path  to data output directory
-							"output_type": "snap",      // data output idetifier (this string will be used in file name)
+							"output_dir": "/home/odroid/bolidozor/station/snapshots",          // absolute path  to data output directory
+							"output_dir_sort": "/home/odroid/bolidozor/station/sort/snapshots",// absolute path to sorted data output directory
+							"output_type": "snap",       // data output idetifier (this string will be used in file name)
 							
-							"snapshot_length": 60,      // length of snapshot in seconds. 
-							"low_freq":      10100,      // low (left) snapshot frequency
-							"hi_freq":       11000,      // high (rigth image border) snaphot frequency
+							"snapshot_length": 60,       // length of snapshot in seconds
+							"low_freq":      26200,      // low (left) snapshot frequency
+							"hi_freq":       26800,      // high (rigth image border) snaphot frequency
 						},
 						{
-							"key":     "recorder",      // inedentification of meteor detector recording.
+							"key":     "recorder",       // identification of meteor detector recording
 							"factory": "bolid",
 							
-							"output_dir": "./snapshots",          // absolute path  to data output directory
-							"output_type": "snap",      // data output idetifier (this string will be used in file name)
-							"advance_time":     2,      // time interval of data recorded before detection is triggered
-							"jitter_time":      5,      // maximal time interval between two separate detection classified as same detection.
+							"output_dir": "/home/odroid/bolidozor/station/meteors",          // absolute path  to data output directory
+							"output_dir_sort": "/home/odroid/bolidozor/station/sort/meteors",// absolute path to sorted data output directory
+							"output_type": "met",       // data output idetifier (this string will be used in file name)
+							"advance_time":     5,      // time interval of data recorded before detection is triggered
+							"jitter_time":      2,      // maximal time interval between two separate detection classified as same detection.
 
-							"low_detect_freq": 10300,   // low  frequency meteor detection border
-							"hi_detect_freq":  10900,   // high frequency meteor detection border (in spectrogram)
-							"low_noise_freq":   9000,   // low border for spectral frequency intensity reference
-							"hi_noise_freq":    9600,   // high border for spectral frequency intensity reference
+							"low_freq": 26200,
+							"hi_freq": 26800,
+
+							"low_detect_freq": 26450,   // low  frequency meteor detection border
+							"hi_detect_freq":  26550,   // high frequency meteor detection border (in spectrogram)
+							"low_noise_freq":  26000,   // low border for spectral frequency intensity reference
+							"hi_noise_freq":   26300,   // high border for spectral frequency intensity reference
 							
 							// time interval between noise entries in the metadata
 							// file (seconds), default is 1 hour (3600 seconds)
-							"noise_metadata_time": 3600,
+							"noise_metadata_time": 120,
 						},
 					],
 				},
@@ -76,4 +86,5 @@
 		},
 	],
 }
+
 

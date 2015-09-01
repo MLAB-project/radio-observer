@@ -114,9 +114,17 @@ public:
 				  const char *comment);
 	
 	void writeHeader(const char *keyword,
+				  double      value,
+				  const char *comment);
+	
+	void writeHeader(const char *keyword,
 				  int         value,
 				  const char *comment);
 	
+	void writeHeader(const char *keyword,
+				  long long   value,
+				  const char *comment);
+
 	void comment(const char *value);
 	
 	void date();
