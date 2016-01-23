@@ -51,7 +51,7 @@
 							"factory": "snapshot",      // method which creates continuous snapshots in eqidistant intervals
 
 							"output_dir": "/home/odroid/bolidozor/station/snapshots",          // absolute path  to data output directory
-							"output_dir_sort": "/home/odroid/bolidozor/station/sort/snapshots",// absolute path to sorted data output directory
+							"output_dir_sort": "/home/odroid/bolidozor/station/sort/snapshots/",// absolute path to sorted data output directory
 							"output_type": "snap",       // data output idetifier (this string will be used in file name)
 							
 							"snapshot_length": 60,       // length of snapshot in seconds
@@ -63,7 +63,7 @@
 							"factory": "bolid",
 							
 							"output_dir": "/home/odroid/bolidozor/station/meteors",          // absolute path  to data output directory
-							"output_dir_sort": "/home/odroid/bolidozor/station/sort/meteors",// absolute path to sorted data output directory
+							"output_dir_sort": "/home/odroid/bolidozor/station/sort/meteors/",// absolute path to sorted data output directory
 							"output_type": "met",       // data output idetifier (this string will be used in file name)
 							"advance_time":     5,      // time interval of data recorded before detection is triggered
 							"jitter_time":      2,      // maximal time interval between two separate detection classified as same detection.
