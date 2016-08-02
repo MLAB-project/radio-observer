@@ -85,6 +85,8 @@ upload-docs:
 	scp $(DOCS_ARCH) jan@milik.cz:public_html/waterfall
 	ssh -t jan@milik.cz "cd ~/public_html/waterfall/docs; tar -xzf ../$(DOCS_ARCH)"
 
+install: $(BIN_NAME)
+	cp $(BIN_NAME) /usr/local/bin/
 
 $(BIN_NAME): $(OBJECT_FILES)
 ifeq ($(IS_LIBRARY),yes)
