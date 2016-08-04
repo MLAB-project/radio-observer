@@ -24,6 +24,12 @@ using namespace std;
 
 
 /**
+ * Integer type capable of holding unix time in milliseconds.
+ */
+typedef int64_t MSTime;
+
+
+/**
  * \brief Represents both specific time and time interval.
  */
 struct WFTime {
@@ -47,10 +53,10 @@ public:
 	inline time_t seconds() const { return time.tv_sec; }
 	inline time_t microseconds() const { return time.tv_usec; }
 	
-	inline float toMilliseconds()
+	inline double toMilliseconds()
 	{
-		return (((float)seconds() * MS_IN_SECOND) +
-			   ((float)microseconds() / (float)US_IN_MS));
+		return (((double)seconds() * (double)MS_IN_SECOND) +
+			   ((double)microseconds() / (double)US_IN_MS));
 	}
 	
 	WFTime()

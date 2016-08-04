@@ -52,22 +52,34 @@
 							"output_type": "snap",      // data output idetifier (this string will be used in file name)
 							
 							"snapshot_length": 60,      // length of snapshot in seconds. 
-							"low_freq":      10100,      // low (left) snapshot frequency
-							"hi_freq":       11000,      // high (rigth image border) snaphot frequency
+							// The following two values define the low (leftmost) and
+							// hight (rightmost) frequency in Hz of the recorded FFT
+							// data.
+							"low_freq":      10100,
+							"hi_freq":       11000,
 						},
 						{
-							"key":     "recorder",      // inedentification of meteor detector recording.
+							"key":     "recorder",      // identification of meteor detector recording.
 							"factory": "bolid",
 							
-							"output_dir": "./snapshots",          // absolute path  to data output directory
-							"output_type": "snap",      // data output idetifier (this string will be used in file name)
-							"advance_time":     2,      // time interval of data recorded before detection is triggered
-							"jitter_time":      5,      // maximal time interval between two separate detection classified as same detection.
-
-							"low_detect_freq": 10300,   // low  frequency meteor detection border
-							"hi_detect_freq":  10900,   // high frequency meteor detection border (in spectrogram)
-							"low_noise_freq":   9000,   // low border for spectral frequency intensity reference
-							"hi_noise_freq":    9600,   // high border for spectral frequency intensity reference
+							"output_dir": "./snapshots", // absolute path  to data output directory
+							"output_type":       "snap", // data output idetifier (this string will be used in file name)
+							"advance_time":           2, // (seconds) time interval of data recorded before detection is triggered
+							// (seconds) Two signals must be separated by at least this
+							// amount of seconds in order to be considered two different
+							// bolids.
+							"jitter_time":            5,							
+							
+							// The following two values define the low (leftmost) and
+							// hight (rightmost) frequency in Hz of the recorded FFT
+							// data.
+							"low_freq":         9000,
+							"hi_freq":         12000,
+							
+							"low_detect_freq": 10300,   // (Hz) low  frequency meteor detection border
+							"hi_detect_freq":  10900,   // (Hz) high frequency meteor detection border (in spectrogram)
+							"low_noise_freq":   9000,   // (Hz) low border for spectral frequency intensity reference
+							"hi_noise_freq":    9600,   // (Hz) high border for spectral frequency intensity reference
 							
 							// time interval between noise entries in the metadata
 							// file (seconds), default is 1 hour (3600 seconds)

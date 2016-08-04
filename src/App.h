@@ -18,6 +18,7 @@ using namespace cppapp;
 #include "config.h"
 #include "Pipeline.h"
 #include "WAVStream.h"
+#include "RawStream.h"
 #include "JackFrontend.h"
 #include "WaterfallBackend.h"
 #include "Signal.h"
