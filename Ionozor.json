@@ -2,19 +2,21 @@
 {
 	"logging": [
 		{
-			"file_name": "radio_iono.log",
+			"file_name": "/home/alice/ionozor/radio-observer.log",
 			"log_level": "debug",
 		},
 	],
 	
-	"jack_left_port":  "system:capture_1",
-	"jack_right_port": "system:capture_2",
+	"frontend": "tcp_raw",
+	"tcp_host": "localhost",
+	"tcp_port": 3701,
+	"raw_sample_rate": 96000,
 	
-	"configuration": "default",
+	"configuration": "VLF",
 	
 	"configurations": [
 		{
-			"key":     "default",
+			"key":     "doppler",
 			"factory": "pipeline",
 			
 			"children": [
@@ -40,6 +42,43 @@
 							"snapshot_length": 400,
 							"low_freq":      10580,
 							"hi_freq":       10620,
+						},
+					],
+				},
+			],
+		},
+
+		{
+			"key":     "VLF",
+			"factory": "pipeline",
+			"metadata_path": "/home/alice/ionozor/station/data/",
+			"metadata_path_sort": "/home/alice/ionozor/station/sort/data/",
+
+			"children": [
+				{
+					"key":     "backend",
+					"factory": "waterfall",
+					
+					"bins":    32768,
+					"overlap": 16384,
+					"buffer_chunk_size": 524288,
+					"origin": "OBSUPICE_VLF_R1",
+					"username":"OBSUPICE",
+					
+					"iq_gain":        0,
+					"iq_phase_shift": 0,
+					
+					"children": [
+						{
+							"key":     "recorder",
+							"factory": "snapshot",
+
+							"output_dir": "/home/alice/ionozor/station/snapshots/",
+							"output_dir_sort": "/home/alice/ionozor/station/sort/snapshots/",
+							"output_type": "snap",
+							"snapshot_length": 300,
+							"low_freq":      15000,
+							"hi_freq":       30000,
 						},
 					],
 				},
