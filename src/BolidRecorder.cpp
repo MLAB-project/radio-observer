@@ -247,6 +247,15 @@ void BolidRecorder::update()
 					fftSamplesToRaw(nextSnapshot_.length)
 				));
 				
+				cout << "met;" << t << ";"
+					<< noise_ << ";"
+					<< peakFreq_ << ";"
+					<< magnitude_ << ";"
+					<< peakFreq_ - (maxDetectFq_ - minDetectFq_) / 4 << ";"
+					<< peakFreq_ + (maxDetectFq_ - minDetectFq_) / 4 << ";"
+					<< duration << ";"
+					<< fftSamplesToRaw(nextSnapshot_.length) << "#" <<endl;
+				
 				LOG_WARNING("************** METEOR DETECTED **************");
 				LOG_INFO("Duration: " << duration << "s" <<
 					    "  |  Frequency: " << peakFreq_ << "Hz");
