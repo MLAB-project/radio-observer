@@ -5,7 +5,28 @@
 			"log_level": "debug",
 		},
 	],
+
+
+	"project": "bolidozor",
+	"project_home_folder": "/home/odroid/bolidozor/station/",
+	"storage_hostname": "space.astro.cz",
+	"storage_username": "testakovsko", // login stanice 
+	"storage_stationpath": "/storage/bolidozor/",
+
+	"HWversion": "RMDS02E",
+
+	"observatory": [
+		{
+			"name": "TEST-RX",
+			"owner.login": "None", // GitHub login
+			"lat": 49.73,
+			"lon": 15.33,
+			"alt": 350.0,
+			"location": "testakovsko",	//City, local name
+		}
+	],
 	
+
 	"frontend": "tcp_raw",
 	"tcp_host": "localhost",
 	"tcp_port": 3701,
