@@ -5,7 +5,26 @@
 			"log_level": "debug",
 		},
 	],
-	
+
+	"project": "bolidozor",
+	"project_home_folder": "/home/odroid/bolidozor/station/",
+	"storage_hostname": "space.astro.cz",
+	"storage_username": "testakovsko", // login stanice 
+	"storage_stationpath": "/storage/bolidozor/",
+
+	"HWversion": "RMDS02D",
+
+	"observatory": [
+		{
+			"name": "TEST-RX",
+			"owner.login": "None", // GitHub login
+			"lat": 49.73,
+			"lon": 15.33,
+			"alt": 350.0,
+			"location": "testakovsko",	//City, local name
+		}
+	],	
+
 	"frontend": "tcp_raw",
 	"tcp_host": "localhost",
 	"tcp_port": 3701,
@@ -43,7 +62,6 @@
 					//"transmitter_carrier": 144447000, // Klet beacon
 
 					"metadata_path":  "/home/odroid/bolidozor/station/data/", // path to metadata output directory
-					"metadata_path_sort":  "/home/odroid/bolidozor/station/sort/data/", // path to metadata output directory
 
 					"children": [
 						{
@@ -51,7 +69,6 @@
 							"factory": "snapshot",      // method which creates continuous snapshots in eqidistant intervals
 
 							"output_dir": "/home/odroid/bolidozor/station/snapshots",          // absolute path  to data output directory
-							"output_dir_sort": "/home/odroid/bolidozor/station/sort/snapshots/",// absolute path to sorted data output directory
 							"output_type": "snap",       // data output idetifier (this string will be used in file name)
 							
 							"snapshot_length": 60,       // length of snapshot in seconds
@@ -63,7 +80,6 @@
 							"factory": "bolid",
 							
 							"output_dir": "/home/odroid/bolidozor/station/meteors",          // absolute path  to data output directory
-							"output_dir_sort": "/home/odroid/bolidozor/station/sort/meteors/",// absolute path to sorted data output directory
 							"output_type": "met",       // data output idetifier (this string will be used in file name)
 							"advance_time":     5,      // time interval of data recorded before detection is triggered
 							"jitter_time":      2,      // maximal time interval between two separate detection classified as same detection.
