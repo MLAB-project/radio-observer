@@ -29,7 +29,7 @@ Compilation
    
    On a debian system (Ubuntu), they can by installed using:
    
-        $ sudo apt-get install libfftw3-dev cfitsio-dev libjack-jackd2-dev clang
+        $ sudo apt-get install libfftw3-dev libcfitsio-dev libjack-jackd2-dev clang
 
 2. Clone the repository using (for instance):
    `git clone https://github.com/MLAB-project/radio-observer.git`.
@@ -43,7 +43,11 @@ Compilation
 
 4. In the `radio-observer` directory, run `make`. The resulting binary, named
    `radio-observer`, should appear in the project's root directory.
-5. If anything goes wrong, please send me an email with the output at
+
+        $ cd ..
+        $ make
+
+6. If anything goes wrong, please send me an email with the output at
    info@ust.cz.
 
 
